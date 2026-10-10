@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AntiPasteExam</title>
+  <meta name="description" content="AntiPasteExam is a modern examination platform designed to verify authentic student responses through typing telemetry, paste detection, and snapshot history." />
+  
+  <!-- Typography (DESIGN.md: Roboto & JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Modular ES Application & Alpine.js -->
+  <script type="module" src="/js/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+</head>
+<body x-data="app">
+
+  <!-- SVG Icon Definitions System (No Emojis in UI) -->
+  <svg style="display: none;">
+    <symbol id="icon-shield" viewBox="0 0 24 24">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5" />
+    </symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </symbol>
+    <symbol id="icon-pause" viewBox="0 0 24 24">
+      <rect x="6" y="4" width="4" height="16" />
+      <rect x="14" y="4" width="4" height="16" />
+    </symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </symbol>
+    <symbol id="icon-file-text" viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </symbol>
+    <symbol id="icon-activity" viewBox="0 0 24 24">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24">
+      <path d="M3 3v5h5" />
+      <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+      <path d="M12 7v5l4 2" />
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </symbol>
+    <symbol id="icon-arrow-up" viewBox="0 0 24 24">
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </symbol>
+    <symbol id="icon-arrow-down" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <polyline points="19 12 12 19 5 12" />
+    </symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24">
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </symbol>
+  </svg>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="brand" @click="currentView = 'dashboard'">
+        <div class="brand-badge-ai">
+          <svg class="icon" style="stroke: #fff;"><use href="#icon-shield" /></svg>
+        </div>
+        <div>
+          <div class="brand-name">AntiPaste<span style="color: var(--color-primary);">Exam</span></div>
+          <span class="brand-tagline">Write, Don't Paste</span>
+        </div>
+      </div>
+
+      <div>
+        <template x-if="user">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="badge" :class="user.role === 'teacher' ? 'badge-primary' : 'badge-neutral'">
+              <span class="pulse-indicator"></span>
+              <span x-text="user.role"></span>
+            </span>
+            <span style="font-weight: 500; font-size: 0.9375rem; color: var(--color-text-main);" x-text="user.name"></span>
+            <button @click="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+          </div>
+        </template>
+        <template x-if="!user">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button @click="authMode = 'login'; document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth' })" class="btn btn-secondary btn-sm">
+              Sign In
+            </button>
+            <button @click="authMode = 'register'; document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth' })" class="btn btn-primary btn-sm">
+              Get Started
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification -->
+  <template x-if="toast.show">
+    <div class="toast-notification" :class="toast.type === 'error' ? 'toast-error' : 'toast-success'">
+      <svg class="icon" :style="toast.type === 'error' ? 'stroke: var(--color-secondary)' : 'stroke: var(--color-neutral)'">
+        <use :href="toast.type === 'error' ? '#icon-alert' : '#icon-check'" />
+      </svg>
+      <span x-text="toast.message"></span>
+    </div>
+  </template>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- 1. LANDING & AUTHENTICATION VIEW -->
+    <template x-if="!user">
+      <div>
+        <!-- Split-Screen Hero Section -->
+        <section class="hero-split">
+          <div>
+            <div class="badge badge-primary" style="margin-bottom: 1.25rem;">
+              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-activity" /></svg>
+              <span>Academic Integrity Telemetry</span>
+            </div>
+            <h1 class="hero-title">
+              Authentic writing verified in real time.
+            </h1>
+            <p style="font-size: 1.125rem; margin: 1.25rem 0 2rem 0; color: var(--color-text-body);">
+              AntiPasteExam monitors input velocity, clipboard actions, and typing snapshot histories to ensure student essay authenticity without invasive surveillance.
+            </p>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button @click="fillDemoCredentials('teacher'); handleAuth();" class="btn btn-primary btn-lg">
+                <svg class="icon" style="stroke: #fff;"><use href="#icon-user" /></svg>
+                <span>Try Demo Teacher</span>
+              </button>
+              <button @click="fillDemoCredentials('student'); handleAuth();" class="btn btn-secondary btn-lg">
+                <svg class="icon"><use href="#icon-edit" /></svg>
+                <span>Try Demo Student</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Visual: Auth Portal Card -->
+          <div class="hero-preview-box" id="auth-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div style="display: flex; background: var(--color-surface-variant); padding: 3px; border-radius: var(--rounded-sm); width: 100%;">
+                <button 
+                  type="button"
+                  class="btn btn-sm" 
+                  style="flex: 1;" 
+                  :class="authMode === 'login' ? 'btn-primary' : 'btn-secondary'" 
+                  @click="authMode = 'login'">
+                  Sign In
+                </button>
+                <button 
+                  type="button"
+                  class="btn btn-sm" 
+                  style="flex: 1;" 
+                  :class="authMode === 'register' ? 'btn-primary' : 'btn-secondary'" 
+                  @click="authMode = 'register'">
+                  Register
+                </button>
+              </div>
+            </div>
+
+            <form @submit.prevent="handleAuth()">
+              <template x-if="authMode === 'register'">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" x-model="authForm.name" placeholder="Prof. Alex Johnson" required />
+                </div>
+              </template>
+
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" x-model="authForm.email" placeholder="name@university.edu" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" x-model="authForm.password" placeholder="••••••••" required />
+              </div>
+
+              <template x-if="authMode === 'register'">
+                <div class="form-group">
+                  <label class="form-label">Account Type</label>
+                  <select class="form-control" x-model="authForm.role">
+                    <option value="student">Student Account</option>
+                    <option value="teacher">Teacher / Instructor Account</option>
+                  </select>
+                </div>
+              </template>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                <span x-text="authMode === 'login' ? 'Sign In to Portal' : 'Create Account'"></span>
+              </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); text-align: center;">
+              <span style="font-size: 0.75rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">
+                Quick Instant Demo Access
+              </span>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" @click="fillDemoCredentials('teacher'); handleAuth();" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  Teacher Login
+                </button>
+                <button type="button" @click="fillDemoCredentials('student'); handleAuth();" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  Student Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Zig-Zag Features Section -->
+        <section style="margin-top: 3rem;">
+          <div class="zig-zag-row">
+            <div>
+              <div class="badge badge-neutral" style="margin-bottom: 0.75rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-lock" /></svg>
+                <span>Input Interception</span>
+              </div>
+              <h2 class="sub-title">Clipboard & Text Injection Prevention</h2>
+              <p>
+                Standard online exam portals only evaluate the final submitted string. AntiPasteExam captures clipboard shortcuts, context-menu actions, and burst character injections at the DOM level, providing clear signals while encouraging manual articulation.
+              </p>
+            </div>
+            <div class="feature-visual-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge badge-error">
+                  <svg class="icon" style="width: 12px; height: 12px;"><use href="#icon-alert" /></svg>
+                  <span>Paste Intercepted</span>
+                </span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);">Delta: +240 chars (0ms)</span>
+              </div>
+              <div style="background: var(--color-surface-variant); border: 1px dashed var(--color-border); border-radius: var(--rounded-sm); padding: 1rem; font-family: var(--font-family-mono); font-size: 0.875rem; color: var(--color-text-body);">
+                <span style="color: var(--color-secondary); font-weight: 600;">[SECURITY EVENT]:</span> Direct clipboard paste blocked. Telemetry counter incremented.
+              </div>
+            </div>
+          </div>
+
+          <div class="zig-zag-row reverse">
+            <div>
+              <div class="badge badge-primary" style="margin-bottom: 0.75rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-history" /></svg>
+                <span>Forensic Replay</span>
+              </div>
+              <h2 class="sub-title">Incremental Snapshot Timeline</h2>
+              <p>
+                Teachers can scrub through time-stamped delta frames to inspect how an answer was written from the first paragraph to the final conclusion, ensuring complete transparency in academic evaluation.
+              </p>
+            </div>
+            <div class="feature-visual-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-weight: 600; font-size: 0.875rem;">Replay Timeline Scrubber</span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-primary);">Frame 14 of 28</span>
+              </div>
+              <div class="playback-console" style="min-height: 100px;">
+                The Industrial Revolution fundamentally altered the relationship between labor and production capital...
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </template>
+
+    <!-- 2. TEACHER DASHBOARD VIEW (Exams List) -->
+    <template x-if="user && user.role === 'teacher' && currentView === 'dashboard'">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="badge badge-primary" style="margin-bottom: 0.5rem;">
+              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
+              <span>Teacher Workspace</span>
+            </div>
+            <h1 class="section-title">Exam Management</h1>
+            <p class="text-muted">Create essay assessments, configure question, and review student typing forensics.</p>
+          </div>
+          <button @click="openCreateExamPage()" class="btn btn-primary">
+            <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
+            <span>Create New Exam</span>
+          </button>
+        </div>
+
+        <div class="grid">
+          <template x-for="exam in exams" :key="exam.id">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge" :class="exam.is_published ? 'badge-neutral' : 'badge-warning'" x-text="exam.is_published ? 'Published' : 'Draft'"></span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="exam.duration_minutes + ' min limit'"></span>
+              </div>
+
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;" x-text="exam.title"></h3>
+              <p class="text-muted" style="font-size: 0.9375rem; margin-bottom: 1.25rem; min-height: 48px;" x-text="exam.description || 'No additional instructions.'"></p>
+
+              <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border-subtle); padding-top: 0.75rem;">
+                <div>
+                  <svg class="icon" style="width: 14px; height: 14px; vertical-align: -2px;"><use href="#icon-file-text" /></svg>
+                  <strong style="color: var(--color-text-main);" x-text="exam.question_count || 0"></strong> Questions
+                </div>
+                <div>
+                  <svg class="icon" style="width: 14px; height: 14px; vertical-align: -2px;"><use href="#icon-user" /></svg>
+                  <strong style="color: var(--color-text-main);" x-text="exam.submission_count || 0"></strong> Submissions
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button @click="viewSubmissions(exam.id)" class="btn btn-primary btn-sm" style="flex: 1;">
+                  <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;"><use href="#icon-eye" /></svg>
+                  <span>Submissions</span>
+                </button>
+                <button @click="openEditExamPage(exam.id)" class="btn btn-secondary btn-sm" title="Edit Questions & Settings">
+                  <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-edit" /></svg>
+                  <span>Edit</span>
+                </button>
+                <button @click="deleteExam(exam.id)" class="btn btn-secondary btn-sm" style="color: var(--color-secondary);" title="Delete Exam">
+                  <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-trash" /></svg>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <template x-if="exams.length === 0">
+          <div class="card" style="padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 2rem auto;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-surface-variant); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+              <svg class="icon" style="width: 28px; height: 28px; stroke: var(--color-primary);"><use href="#icon-file-text" /></svg>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">No Examinations Created</h3>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">Set up your first examination with essay questions and custom duration limits on a dedicated management screen.</p>
+            <button @click="openCreateExamPage()" class="btn btn-primary">
+              <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
+              <span>Create New Exam</span>
+            </button>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- 3. DEDICATED EXAM & QUESTION MANAGEMENT WORKSPACE PAGE -->
+    <template x-if="user && user.role === 'teacher' && currentView === 'exam_editor'">
+      <div>
+        <!-- Page Header & Action Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem;">
+          <div>
+            <button @click="currentView = 'dashboard'" class="btn btn-secondary btn-sm" style="margin-bottom: 0.5rem;">
+              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-arrow-left" /></svg>
+              <span>Back to Dashboard</span>
+            </button>
+            <h1 class="section-title" style="margin-bottom: 0.25rem;" x-text="isEditingExam ? 'Edit Examination & Questions' : 'Create New Examination'"></h1>
+            <p class="text-muted">Configure examination parameters and build structured essay questions.</p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" @click="currentView = 'dashboard'" class="btn btn-secondary">
+              Discard
+            </button>
+            <button type="button" @click="saveExam()" class="btn btn-primary">
+              <svg class="icon" style="stroke: #fff;"><use href="#icon-check" /></svg>
+              <span x-text="isEditingExam ? 'Save Changes' : 'Publish Examination'"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2-Column Workspace -->
+        <div class="exam-editor-workspace">
+          
+          <!-- Left Column: Exam Settings Sidebar -->
+          <div class="exam-editor-sidebar">
+            <div class="card" style="margin-bottom: 1.5rem;">
+              <h3 style="font-size: 1.125rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: 0.5rem;">
+                Examination Settings
+              </h3>
+
+              <div class="form-group">
+                <label class="form-label">Examination Title</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  x-model="examForm.title" 
+                  placeholder="e.g. Modern Philosophy & Ethics Midterm" 
+                  required 
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Instructions for Students</label>
+                <textarea 
+                  class="form-control" 
+                  style="min-height: 100px;" 
+                  x-model="examForm.description" 
+                  placeholder="Provide context, required style, or instructions...">
+                </textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Duration Limit (Minutes)</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  x-model.number="examForm.duration_minutes" 
+                  min="5" 
+                  max="300" 
+                  required 
+                />
+                <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                  <button type="button" @click="examForm.duration_minutes = 30" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">30m</button>
+                  <button type="button" @click="examForm.duration_minutes = 45" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">45m</button>
+                  <button type="button" @click="examForm.duration_minutes = 60" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">60m</button>
+                  <button type="button" @click="examForm.duration_minutes = 90" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">90m</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Publication Status</label>
+                <select class="form-control" x-model="examForm.is_published">
+                  <option :value="true">Published (Available for students)</option>
+                  <option :value="false">Draft Mode (Hidden from students)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card" style="background: var(--color-surface-variant);">
+              <h4 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 1rem;">
+                Structure Summary
+              </h4>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9375rem;">
+                <span class="text-muted">Total Essay Questions:</span>
+                <strong class="text-mono" x-text="examForm.questions.length"></strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9375rem;">
+                <span class="text-muted">Accumulated Points:</span>
+                <strong class="text-mono" x-text="totalScore + ' pts'"></strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.9375rem;">
+                <span class="text-muted">Estimated Pacing:</span>
+                <strong class="text-mono" x-text="Math.round(examForm.duration_minutes / (examForm.questions.length || 1)) + ' min / question'"></strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Essay Question Builder -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="font-size: 1.25rem;">Essay Questions</h3>
+                <p class="text-muted" style="font-size: 0.875rem;">Define each question. Students will articulate their response with anti-paste tracking.</p>
+              </div>
+              <button type="button" @click="addQuestionField()" class="btn btn-secondary btn-sm">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-plus" /></svg>
+                <span>Add Question</span>
+              </button>
+            </div>
+
+            <!-- Questions Cards List -->
+            <div style="display: flex; flex-direction: column;">
+              <template x-for="(q, idx) in examForm.questions" :key="idx">
+                <div class="question-builder-card">
+                  
+                  <!-- Question Header Bar -->
+                  <div class="question-builder-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="badge badge-primary" x-text="'Question #' + (idx + 1)"></span>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 0.8125rem; color: var(--color-text-muted);">Points:</label>
+                        <input 
+                          type="number" 
+                          class="form-control text-mono" 
+                          style="width: 80px; padding: 4px 8px; font-size: 0.875rem;" 
+                          x-model.number="q.max_score" 
+                          min="1" 
+                          max="1000" 
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Question Reorder & Control Toolbar -->
+                    <div class="question-actions-toolbar">
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary btn-sm" 
+                        style="padding: 4px 8px;" 
+                        :disabled="idx === 0" 
+                        @click="moveQuestionUp(idx)" 
+                        title="Move Up">
+                        <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-arrow-up" /></svg>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary btn-sm" 
+                        style="padding: 4px 8px;" 
+                        :disabled="idx === examForm.questions.length - 1" 
+                        @click="moveQuestionDown(idx)" 
+                        title="Move Down">
+                        <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-arrow-down" /></svg>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary btn-sm" 
+                        style="padding: 4px 8px;" 
+                        @click="duplicateQuestion(idx)" 
+                        title="Duplicate Question">
+                        <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-copy" /></svg>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary btn-sm" 
+                        style="padding: 4px 8px; color: var(--color-secondary);" 
+                        @click="removeQuestionField(idx)" 
+                        title="Remove Question">
+                        <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-trash" /></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Question Text Input -->
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <textarea 
+                      class="form-control" 
+                      rows="4" 
+                      placeholder="Type the essay question, case study scenario, or analysis topic here..." 
+                      x-model="q.question_text" 
+                      required>
+                    </textarea>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 4px; font-size: 0.75rem; color: var(--color-text-muted);">
+                      <span x-text="(q.question_text?.length || 0) + ' characters'"></span>
+                    </div>
+                  </div>
+
+                </div>
+              </template>
+            </div>
+
+            <!-- Bottom Add Button -->
+            <button 
+              type="button" 
+              @click="addQuestionField()" 
+              class="btn btn-secondary" 
+              style="width: 100%; border-style: dashed; padding: 14px; margin-top: 0.5rem;">
+              <svg class="icon"><use href="#icon-plus" /></svg>
+              <span>Add Another Essay Question</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </template>
+
+    <!-- 4. TEACHER VIEW: EXAM SUBMISSIONS TABLE -->
+    <template x-if="user && user.role === 'teacher' && currentView === 'teacher_submissions'">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <button @click="currentView = 'dashboard'" class="btn btn-secondary btn-sm" style="margin-bottom: 0.75rem;">
+              ← Back to Exams List
+            </button>
+            <h1 class="section-title" x-text="activeExam?.title"></h1>
+            <p class="text-muted">Student submission roster with academic integrity verification indicators.</p>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Paste Attempts</th>
+                <th>Integrity Score</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="sub in currentSubmissionsList" :key="sub.id">
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--color-text-main);" x-text="sub.student_name"></div>
+                    <div class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="sub.student_email"></div>
+                  </td>
+                  <td>
+                    <span class="badge" :class="sub.status === 'submitted' ? 'badge-neutral' : 'badge-warning'" x-text="sub.status"></span>
+                  </td>
+                  <td>
+                    <span class="text-mono" :style="sub.total_paste_count > 0 ? 'color: var(--color-secondary); font-weight: 700;' : 'color: var(--color-text-muted);'" x-text="sub.total_paste_count + ' attempts'"></span>
+                  </td>
+                  <td>
+                    <span class="text-mono" style="font-weight: 700; font-size: 1.125rem;" 
+                          :style="sub.overall_integrity_score >= 80 ? 'color: var(--color-neutral);' : (sub.overall_integrity_score >= 50 ? 'color: var(--color-tertiary);' : 'color: var(--color-secondary);')"
+                          x-text="sub.overall_integrity_score + '%'">
+                    </span>
+                  </td>
+                  <td>
+                    <button @click="openSubmissionAudit(sub.id)" class="btn btn-primary btn-sm">
+                      <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;"><use href="#icon-eye" /></svg>
+                      <span>Forensic Audit</span>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <template x-if="currentSubmissionsList.length === 0">
+            <div style="padding: 3rem; text-align: center; color: var(--color-text-muted);">
+              No submissions recorded for this examination yet.
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <!-- 5. STUDENT DASHBOARD VIEW -->
+    <template x-if="user && user.role === 'student' && currentView === 'dashboard'">
+      <div>
+        <div style="margin-bottom: 2rem;">
+          <div class="badge badge-neutral" style="margin-bottom: 0.5rem;">
+            <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
+            <span>Student Portal</span>
+          </div>
+          <h1 class="section-title">Available Examinations</h1>
+          <p class="text-muted">Select an examination session. Note that paste events and irregular input injections are flagged automatically.</p>
+        </div>
+
+        <div class="grid">
+          <template x-for="exam in exams" :key="exam.id">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge badge-primary">
+                  <svg class="icon" style="width: 12px; height: 12px;"><use href="#icon-clock" /></svg>
+                  <span x-text="exam.duration_minutes + ' Minutes'"></span>
+                </span>
+                <span style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="'Instructor: ' + exam.teacher_name"></span>
+              </div>
+
+              <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;" x-text="exam.title"></h3>
+              <p class="text-muted" style="font-size: 0.9375rem; margin-bottom: 1.5rem;" x-text="exam.description || 'Standard essay assessment.'"></p>
+
+              <template x-if="exam.submission_status === 'submitted'">
+                <div style="background: var(--color-neutral-subtle); border: 1px solid var(--color-neutral-border); border-radius: var(--rounded-sm); padding: 0.85rem; margin-bottom: 1rem; text-align: center;">
+                  <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--color-neutral);">Submission Recorded</div>
+                  <div class="text-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--color-neutral);" x-text="'Integrity Score: ' + exam.overall_integrity_score + '%'"></div>
+                </div>
+              </template>
+
+              <template x-if="exam.submission_status === 'submitted'">
+                <button @click="openSubmissionAudit(exam.submission_id)" class="btn btn-secondary btn-sm" style="width: 100%;">
+                  <span>Review Submission Log</span>
+                </button>
+              </template>
+
+              <template x-if="exam.submission_status !== 'submitted'">
+                <button @click="startExam(exam.id)" class="btn btn-success" style="width: 100%;">
+                  <span x-text="exam.submission_status === 'in_progress' ? 'Resume Examination' : 'Start Examination'"></span>
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <!-- 6. STUDENT EXAM ROOM (ACTIVE TELEMETRY & ANTI-PASTE) -->
+    <template x-if="user && currentView === 'exam_room' && activeExam">
+      <div>
+        <div class="card" style="padding: 1rem 1.5rem; margin-bottom: 2rem; position: sticky; top: 72px; z-index: var(--z-sticky);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
+            <div>
+              <span class="badge badge-primary" style="margin-bottom: 4px;">Active Session</span>
+              <h2 style="font-size: 1.35rem;" x-text="activeExam.title"></h2>
+            </div>
+
+            <div class="telemetry-bar" style="margin: 0; padding: 0.6rem 1rem;">
+              <div class="telemetry-pill">
+                <svg class="icon" style="stroke: var(--color-tertiary);"><use href="#icon-clock" /></svg>
+                <span>Time Remaining:</span>
+                <strong class="text-mono" style="color: var(--color-text-main); font-size: 1.125rem;" x-text="formatTime(examTimerSeconds)"></strong>
+              </div>
+              <div class="telemetry-pill">
+                <span class="pulse-indicator" style="color: var(--color-neutral);"></span>
+                <span class="text-muted" x-text="saveStatusText"></span>
+              </div>
+              <button @click="saveExamProgress(false)" class="btn btn-secondary btn-sm">Save Draft</button>
+              <button @click="submitFinalExam()" class="btn btn-success btn-sm">Finalize & Submit</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+          <template x-for="(q, idx) in activeExam.questions" :key="q.id">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge badge-primary" x-text="'Question #' + (idx + 1)"></span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="'Max Score: ' + q.max_score + ' pts'"></span>
+              </div>
+
+              <h3 style="font-size: 1.125rem; margin-bottom: 1.25rem; color: var(--color-text-main);" x-text="q.question_text"></h3>
+
+              <div class="form-group">
+                <label class="form-label" style="display: flex; justify-content: space-between;">
+                  <span>Essay Response (Manual input required)</span>
+                  <span style="color: var(--color-secondary); font-size: 0.75rem; font-weight: 600;">Direct Paste Disabled</span>
+                </label>
+                <textarea 
+                  class="form-control" 
+                  rows="8"
+                  placeholder="Articulate your essay answer here manually..."
+                  x-model="studentAnswers[q.id].content"
+                  @paste="handlePasteAttempt($event, q.id)"
+                  @keydown="handleKeyDown($event, q.id)"
+                  @input="handleInput($event, q.id)"
+                ></textarea>
+              </div>
+
+              <div style="display: flex; gap: 1.5rem; font-size: 0.8125rem; color: var(--color-text-muted); flex-wrap: wrap; border-top: 1px solid var(--color-border-subtle); padding-top: 0.75rem;">
+                <div>Keystrokes: <strong class="text-mono" style="color: var(--color-text-main);" x-text="studentAnswers[q.id].total_keystrokes"></strong></div>
+                <div>Characters: <strong class="text-mono" style="color: var(--color-text-main);" x-text="studentAnswers[q.id].content?.length || 0"></strong></div>
+                <div>Paste Attempts: <strong class="text-mono" :style="studentAnswers[q.id].paste_count > 0 ? 'color: var(--color-secondary);' : 'color: var(--color-text-main);'" x-text="studentAnswers[q.id].paste_count"></strong></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <!-- 7. FORENSIC AUDIT & SNAPSHOT REPLAY VIEW -->
+    <template x-if="currentView === 'submission_audit' && selectedSubmission">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <button @click="currentView = 'dashboard'" class="btn btn-secondary btn-sm" style="margin-bottom: 0.75rem;">
+              ← Back to Overview
+            </button>
+            <h1 class="section-title">Forensic Audit Log</h1>
+            <p class="text-muted" x-text="'Exam: ' + selectedSubmission.submission.exam_title + ' | Student: ' + selectedSubmission.submission.student_name"></p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div>
+              <div class="stat-label">Calculated Integrity Score</div>
+              <div class="stat-val" 
+                   :style="selectedSubmission.submission.overall_integrity_score >= 80 ? 'color: var(--color-neutral);' : (selectedSubmission.submission.overall_integrity_score >= 50 ? 'color: var(--color-tertiary);' : 'color: var(--color-secondary);')"
+                   x-text="selectedSubmission.submission.overall_integrity_score + '%'">
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <div class="stat-box">
+                <div class="stat-label">Submitted Answers</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700;" x-text="selectedSubmission.answers.length"></div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Flagged Events</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700; color: var(--color-secondary);" x-text="selectedSubmission.events.length"></div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Timeline Snapshots</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700;" x-text="selectedSubmission.snapshots.length"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template x-if="selectedSubmission.snapshots && selectedSubmission.snapshots.length > 0">
+          <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="font-size: 1.125rem;">Visual Typing Reconstruction</h3>
+                <p class="text-muted" style="font-size: 0.875rem;">Step-by-step playback of how the student formulated the response over time.</p>
+              </div>
+              <button @click="togglePlayback()" class="btn btn-primary btn-sm">
+                <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;">
+                  <use :href="isReplaying ? '#icon-pause' : '#icon-play'" />
+                </svg>
+                <span x-text="isReplaying ? 'Pause Playback' : 'Play Timeline'"></span>
+              </button>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <input 
+                type="range" 
+                min="0" 
+                :max="selectedSubmission.snapshots.length - 1" 
+                x-model="auditSnapshotIndex" 
+                style="width: 100%; accent-color: var(--color-primary);" 
+              />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">
+                <span>Start Session</span>
+                <span class="text-mono" x-text="'Frame ' + (parseInt(auditSnapshotIndex) + 1) + ' of ' + selectedSubmission.snapshots.length + ' (' + selectedSubmission.snapshots[auditSnapshotIndex]?.time_offset_seconds + 's elapsed)'"></span>
+                <span>Final Submission</span>
+              </div>
+            </div>
+
+            <div class="playback-console" x-text="selectedSubmission.snapshots[auditSnapshotIndex]?.snapshot_text || 'No text recorded in this frame.'"></div>
+          </div>
+        </template>
+
+        <div style="margin-bottom: 2rem;">
+          <h3 class="sub-title">Submitted Essay Responses</h3>
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <template x-for="ans in selectedSubmission.answers" :key="ans.id">
+              <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                  <h4 x-text="'Question: ' + ans.question_text"></h4>
+                  <span class="badge" :class="ans.integrity_score >= 80 ? 'badge-neutral' : 'badge-error'" x-text="'Integrity: ' + ans.integrity_score + '%'"></span>
+                </div>
+
+                <div style="background: var(--color-surface-variant); border: 1px solid var(--color-border); border-radius: var(--rounded-sm); padding: 1.25rem; margin-bottom: 1rem; white-space: pre-wrap; font-size: 0.9375rem; line-height: 1.6;" x-text="ans.content"></div>
+
+                <div style="display: flex; gap: 2rem; font-size: 0.8125rem; color: var(--color-text-muted); flex-wrap: wrap;">
+                  <div>Keystrokes: <strong class="text-mono" style="color: var(--color-text-main);" x-text="ans.total_keystrokes"></strong></div>
+                  <div>Paste Count: <strong class="text-mono" :style="ans.paste_count > 0 ? 'color: var(--color-secondary);' : ''" x-text="ans.paste_count"></strong></div>
+                  <div>Large Injections: <strong class="text-mono" :style="ans.text_injection_count > 0 ? 'color: var(--color-secondary);' : ''" x-text="ans.text_injection_count"></strong></div>
+                  <div>Active Typing Duration: <strong class="text-mono" style="color: var(--color-text-main);" x-text="ans.typing_duration_seconds + 's'"></strong></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="sub-title" style="margin-bottom: 1rem;">Security Events Log</h3>
+          <template x-if="selectedSubmission.events.length === 0">
+            <div style="color: var(--color-text-muted); font-size: 0.9375rem;">No security violations or anomalous paste actions recorded. Perfectly authentic session.</div>
+          </template>
+          <template x-if="selectedSubmission.events.length > 0">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <template x-for="ev in selectedSubmission.events" :key="ev.id">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--color-secondary-subtle); border: 1px solid var(--color-secondary-border); border-radius: var(--rounded-sm); font-size: 0.875rem;">
+                  <div>
+                    <strong style="color: var(--color-secondary);" x-text="ev.event_type.toUpperCase()"></strong>
+                    <span style="color: var(--color-text-body); margin-left: 8px;" x-text="typeof ev.event_data === 'object' ? JSON.stringify(ev.event_data) : ev.event_data"></span>
+                  </div>
+                  <span class="text-mono" style="color: var(--color-text-muted); font-size: 0.8125rem;" x-text="new Date(ev.detected_at).toLocaleTimeString()"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+  </main>
+</body>
+</html>
