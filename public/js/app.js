@@ -4,6 +4,10 @@ import { createTeacherModule } from './modules/teacher.js';
 import { createStudentModule } from './modules/student.js';
 import { createTelemetryEngine } from './modules/telemetry.js';
 
+/**
+ * Main Alpine.js application data factory.
+ * Registered before Alpine initializes via the alpine:init event.
+ */
 function defineApp() {
   window.Alpine.data('app', () => {
     // Helper to perform API calls with current auth token
@@ -20,10 +24,12 @@ function defineApp() {
     const studentModule = createStudentModule(api, toast);
 
     const appState = {
-      currentView: 'dashboard', // 'dashboard' | 'exam_editor' | 'exam_room' | 'teacher_submissions' | 'submission_audit'
+      // Views: 'dashboard' | 'exam_editor' | 'exam_room' | 'teacher_submissions' | 'submission_audit'
+      currentView: 'dashboard',
       toast: { show: false, message: '', type: 'info' },
       exams: [],
       activeExam: null,
+      isLoading: false,
 
       // Concrete initialized sub-modules
       auth: authModule,
@@ -49,17 +55,21 @@ function defineApp() {
         this.toast = { show: true, message, type };
         setTimeout(() => {
           this.toast.show = false;
-        }, 4000);
+        }, 4500);
       },
 
-      // Proxied getters with safe fallbacks
+      // --------------- Proxied Getters/Setters ---------------
       get user() { return this.auth?.user || null; },
       get token() { return this.auth?.token || ''; },
       get authMode() { return this.auth?.authMode || 'login'; },
       set authMode(v) { if (this.auth) this.auth.authMode = v; },
       get authForm() { return this.auth?.authForm || { name: '', email: '', password: '', role: 'student' }; },
       get isEditingExam() { return this.teacher?.isEditingExam || false; },
-      get examForm() { return this.teacher?.examForm || { id: null, title: '', description: '', duration_minutes: 45, is_published: true, questions: [] }; },
+      get examForm() {
+        return this.teacher?.examForm || {
+          id: null, title: '', description: '', duration_minutes: 45, is_published: false, questions: []
+        };
+      },
       get totalScore() { return this.teacher?.totalScore || 0; },
       get currentSubmissionsList() { return this.teacher?.currentSubmissionsList || []; },
       get selectedSubmission() { return this.teacher?.selectedSubmission || null; },
@@ -71,7 +81,7 @@ function defineApp() {
       get examTimerSeconds() { return this.telemetry?.examTimerSeconds || 0; },
       get saveStatusText() { return this.telemetry?.saveStatusText || 'All changes saved'; },
 
-      // Auth actions
+      // --------------- Auth Actions ---------------
       async handleAuth() {
         const user = await this.auth.handleAuth();
         if (user) {
@@ -79,84 +89,139 @@ function defineApp() {
           this.fetchExams();
         }
       },
-      fillDemoCredentials(role) { this.auth.fillDemoCredentials(role); },
+
+      fillDemoCredentials(role) {
+        this.auth.fillDemoCredentials(role);
+      },
+
+      async loginOrRegisterDemo(role) {
+        this.auth.fillDemoCredentials(role);
+        this.auth.authMode = 'login';
+        // Try login first; if it fails, register then login
+        const user = await this.auth.handleAuth();
+        if (user) {
+          this.currentView = 'dashboard';
+          this.fetchExams();
+        } else {
+          // Auto-register demo account
+          this.auth.authMode = 'register';
+          const regUser = await this.auth.handleAuth();
+          if (regUser) {
+            this.currentView = 'dashboard';
+            this.fetchExams();
+          }
+        }
+      },
+
       logout() {
         this.auth.logout();
         if (this.telemetry) this.telemetry.stopSession();
         this.currentView = 'dashboard';
+        this.exams = [];
+        this.activeExam = null;
       },
 
-      // Exams listing
+      // --------------- Exams Listing ---------------
       async fetchExams() {
+        this.isLoading = true;
         try {
           const data = await apiRequest('/api/exams', {}, this.auth?.token, this.showToast.bind(this));
           this.exams = data.exams || [];
         } catch (err) {
-          console.error(err);
+          console.error('Failed to fetch exams:', err);
+        } finally {
+          this.isLoading = false;
         }
       },
 
-      // Teacher actions
+      // --------------- Teacher Actions ---------------
       openCreateExamPage() {
         this.currentView = this.teacher.openCreateExamPage();
       },
+
       async openEditExamPage(examId) {
         const view = await this.teacher.openEditExamPage(examId);
         if (view) this.currentView = view;
       },
+
       addQuestionField() { this.teacher.addQuestionField(); },
       removeQuestionField(idx) { this.teacher.removeQuestionField(idx); },
       moveQuestionUp(idx) { this.teacher.moveQuestionUp(idx); },
       moveQuestionDown(idx) { this.teacher.moveQuestionDown(idx); },
       duplicateQuestion(idx) { this.teacher.duplicateQuestion(idx); },
-      async saveExam() {
-        const success = await this.teacher.saveExam(this.fetchExams.bind(this));
+
+      async saveExam(publish = false) {
+        const success = await this.teacher.saveExam(this.fetchExams.bind(this), publish);
         if (success) {
-          this.currentView = 'dashboard';
+          if (publish) {
+            // Only navigate back after publishing (exam is now locked)
+            this.currentView = 'dashboard';
+          }
+          // For draft saves, stay on the editor page so teacher can keep editing
         }
       },
-      async deleteExam(id) { await this.teacher.deleteExam(id, this.fetchExams.bind(this)); },
+
+      async publishExam(id) {
+        await this.teacher.publishExamDirectly(id, this.fetchExams.bind(this));
+      },
+
+      async deleteExam(id) {
+        await this.teacher.deleteExam(id, this.fetchExams.bind(this));
+      },
+
       async viewSubmissions(examId) {
         this.activeExam = await this.teacher.loadExamSubmissions(examId);
         this.currentView = 'teacher_submissions';
       },
+
       async openSubmissionAudit(submissionId) {
         await this.teacher.loadSubmissionAudit(submissionId);
         this.currentView = 'submission_audit';
       },
+
       togglePlayback() { this.teacher.togglePlayback(); },
 
-      // Student actions
+      // --------------- Student Actions ---------------
       async startExam(examId) {
         try {
           this.activeExam = await this.student.startExamSession(examId, this.telemetry);
           this.currentView = 'exam_room';
-          this.telemetry.startSession(this.activeExam.duration_minutes, (isBg) => this.student.saveDraft(this.telemetry, isBg));
-          this.showToast('Examination session active. Anti-paste telemetry enabled.', 'info');
+          this.telemetry.startSession(
+            this.activeExam.duration_minutes,
+            (isBg) => this.student.saveDraft(this.telemetry, isBg)
+          );
+          this.showToast('Examination session active. Anti-paste telemetry is running.', 'info');
         } catch (err) {
-          console.error(err);
+          console.error('Failed to start exam:', err);
         }
       },
+
       handlePasteAttempt(e, qId) { if (this.telemetry) this.telemetry.handlePasteAttempt(e, qId); },
       handleKeyDown(e, qId) { if (this.telemetry) this.telemetry.handleKeyDown(e, qId); },
       handleInput(e, qId) { if (this.telemetry) this.telemetry.handleInput(e, qId); },
-      async saveExamProgress(isBackground = false) { await this.student.saveDraft(this.telemetry, isBackground); },
+
+      async saveExamProgress(isBackground = false) {
+        await this.student.saveDraft(this.telemetry, isBackground);
+      },
+
       async submitFinalExam() {
-        const submissionId = await this.student.finalizeSubmission(this.telemetry, this.activeExam.duration_minutes);
+        const submissionId = await this.student.finalizeSubmission(
+          this.telemetry,
+          this.activeExam.duration_minutes
+        );
         if (submissionId) {
           await this.openSubmissionAudit(submissionId);
         }
       },
-      formatTime(sec) { return this.telemetry ? this.telemetry.formatTime(sec) : '00:00'; },
+
+      formatTime(sec) {
+        return this.telemetry ? this.telemetry.formatTime(sec) : '00:00';
+      },
     };
 
     return appState;
   });
 }
 
-// Support both alpine:init event and immediate window.Alpine readiness
-if (window.Alpine) {
-  defineApp();
-} else {
-  document.addEventListener('alpine:init', defineApp);
-}
+// Register BEFORE Alpine initializes — alpine:init fires before Alpine processes x-data
+document.addEventListener('alpine:init', defineApp);

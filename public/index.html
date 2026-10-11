@@ -395,9 +395,13 @@
             <button type="button" @click="currentView = 'dashboard'" class="btn btn-secondary">
               Discard
             </button>
-            <button type="button" @click="saveExam()" class="btn btn-primary">
+            <button type="button" @click="saveExam(false)" class="btn btn-secondary">
+              <svg class="icon"><use href="#icon-history" /></svg>
+              <span>Save Draft</span>
+            </button>
+            <button type="button" @click="saveExam(true)" class="btn btn-primary">
               <svg class="icon" style="stroke: #fff;"><use href="#icon-check" /></svg>
-              <span x-text="isEditingExam ? 'Save Changes' : 'Publish Examination'"></span>
+              <span>Publish Examination</span>
             </button>
           </div>
         </div>
@@ -451,12 +455,15 @@
                 </div>
               </div>
 
+              <!-- Publication status is controlled by the Save Draft / Publish buttons above -->
               <div class="form-group">
-                <label class="form-label">Publication Status</label>
-                <select class="form-control" x-model="examForm.is_published">
-                  <option :value="true">Published (Available for students)</option>
-                  <option :value="false">Draft Mode (Hidden from students)</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem; background: var(--color-surface-variant); border: 1px solid var(--color-border-subtle); border-radius: var(--rounded-sm);">
+                  <svg class="icon" style="width: 16px; height: 16px; flex-shrink: 0;" :style="examForm.is_published ? 'stroke: var(--color-neutral);' : 'stroke: var(--color-tertiary);'"><use href="#icon-lock" /></svg>
+                  <div>
+                    <div style="font-size: 0.8125rem; font-weight: 600;" x-text="examForm.is_published ? 'Published — Locked' : 'Draft — Editable'"></div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);" x-text="examForm.is_published ? 'Visible to students. Cannot be edited.' : 'Hidden from students. Use Save Draft to keep editing.'"></div>
+                  </div>
+                </div>
               </div>
             </div>
 

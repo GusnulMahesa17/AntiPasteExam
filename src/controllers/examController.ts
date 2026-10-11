@@ -56,6 +56,18 @@ export const updateExam = async (req: AuthenticatedRequest, res: Response): Prom
   }
 };
 
+export const publishExam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const examId = parseInt(req.params.id as string, 10);
+    const teacherId = req.user!.id;
+
+    await ExamService.publishExam(examId, teacherId);
+    res.status(200).json({ message: 'Exam published successfully' });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to publish exam' });
+  }
+};
+
 export const deleteExam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const examId = parseInt(req.params.id as string, 10);

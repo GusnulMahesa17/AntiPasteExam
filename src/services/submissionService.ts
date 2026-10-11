@@ -10,7 +10,7 @@ export class SubmissionService {
     );
 
     if (exams.length === 0 || !exams[0].is_published) {
-      const error: any = new Error('Exam not found or is not active');
+      const error: any = new Error('Exam not found or is not active/published');
       error.statusCode = 404;
       throw error;
     }
@@ -61,13 +61,22 @@ export class SubmissionService {
       await connection.beginTransaction();
 
       const [subs] = await connection.query<RowDataPacket[]>(
-        'SELECT id, status FROM submissions WHERE id = ? AND student_id = ?',
+        `SELECT s.id, s.status, e.is_published 
+         FROM submissions s
+         JOIN exams e ON s.exam_id = e.id
+         WHERE s.id = ? AND s.student_id = ?`,
         [submissionId, studentId]
       );
 
       if (subs.length === 0) {
         const error: any = new Error('Submission not found or unauthorized');
         error.statusCode = 404;
+        throw error;
+      }
+
+      if (!subs[0].is_published) {
+        const error: any = new Error('This exam is not published and is not accepting answers');
+        error.statusCode = 403;
         throw error;
       }
 
@@ -183,13 +192,22 @@ export class SubmissionService {
       await connection.beginTransaction();
 
       const [subs] = await connection.query<RowDataPacket[]>(
-        'SELECT id, status FROM submissions WHERE id = ? AND student_id = ?',
+        `SELECT s.id, s.status, e.is_published 
+         FROM submissions s
+         JOIN exams e ON s.exam_id = e.id
+         WHERE s.id = ? AND s.student_id = ?`,
         [submissionId, studentId]
       );
 
       if (subs.length === 0) {
         const error: any = new Error('Submission not found');
         error.statusCode = 404;
+        throw error;
+      }
+
+      if (!subs[0].is_published) {
+        const error: any = new Error('Cannot submit to an unpublished examination');
+        error.statusCode = 403;
         throw error;
       }
 

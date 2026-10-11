@@ -40,17 +40,30 @@ export class ExamService {
 
       const { title, description, duration_minutes, start_time, end_time, is_published, questions } = data;
 
+      if (!title || !title.trim()) {
+        const error: any = new Error('Title is required');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const willPublish = Boolean(is_published);
+      if (willPublish && (!Array.isArray(questions) || questions.length === 0 || !questions[0]?.question_text?.trim())) {
+        const error: any = new Error('Cannot publish an examination without at least one valid question.');
+        error.statusCode = 400;
+        throw error;
+      }
+
       const [examResult] = await connection.query<ResultSetHeader>(
         `INSERT INTO exams (teacher_id, title, description, duration_minutes, start_time, end_time, is_published)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           teacherId,
-          title,
+          title.trim(),
           description || '',
           duration_minutes || 60,
           start_time ? new Date(start_time) : null,
           end_time ? new Date(end_time) : null,
-          is_published ? 1 : 0,
+          willPublish ? 1 : 0,
         ]
       );
 
@@ -63,7 +76,7 @@ export class ExamService {
             await connection.query(
               `INSERT INTO questions (exam_id, question_text, max_score, order_index)
                VALUES (?, ?, ?, ?)`,
-              [examId, q.question_text, q.max_score || 100, i + 1]
+              [examId, q.question_text.trim(), q.max_score || 100, i + 1]
             );
           }
         }
@@ -81,7 +94,8 @@ export class ExamService {
 
   public static async getExamDetails(examId: number, userId: number, userRole: string) {
     const [examRows] = await pool.query<RowDataPacket[]>(
-      `SELECT e.*, u.name AS teacher_name 
+      `SELECT e.*, u.name AS teacher_name,
+              (SELECT COUNT(*) FROM submissions s WHERE s.exam_id = e.id) AS submission_count
        FROM exams e 
        JOIN users u ON e.teacher_id = u.id 
        WHERE e.id = ?`,
@@ -96,8 +110,9 @@ export class ExamService {
 
     const exam = examRows[0];
 
+    // Students can NEVER access unpublished exams
     if (userRole === 'student' && !exam.is_published) {
-      const error: any = new Error('This exam is not available');
+      const error: any = new Error('This exam is not published and cannot be accessed.');
       error.statusCode = 403;
       throw error;
     }
@@ -132,8 +147,11 @@ export class ExamService {
       const { title, description, duration_minutes, start_time, end_time, is_published, questions } = data;
 
       const [exams] = await connection.query<RowDataPacket[]>(
-        'SELECT id FROM exams WHERE id = ? AND teacher_id = ?',
-        [examId, teacherId]
+        `SELECT id, is_published, 
+                (SELECT COUNT(*) FROM submissions WHERE exam_id = ?) AS submission_count 
+         FROM exams 
+         WHERE id = ? AND teacher_id = ?`,
+        [examId, examId, teacherId]
       );
 
       if (exams.length === 0) {
@@ -142,17 +160,33 @@ export class ExamService {
         throw error;
       }
 
+      const existingExam = exams[0];
+
+      // Critical Rule: Once published or when submissions exist, the exam CANNOT be edited!
+      if (existingExam.is_published || existingExam.submission_count > 0) {
+        const error: any = new Error('Published examinations cannot be edited to preserve submission authenticity.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const willPublish = Boolean(is_published);
+      if (willPublish && (!Array.isArray(questions) || questions.length === 0 || !questions[0]?.question_text?.trim())) {
+        const error: any = new Error('Cannot publish an examination without at least one valid question.');
+        error.statusCode = 400;
+        throw error;
+      }
+
       await connection.query(
         `UPDATE exams 
          SET title = ?, description = ?, duration_minutes = ?, start_time = ?, end_time = ?, is_published = ?
          WHERE id = ?`,
         [
-          title,
+          title.trim(),
           description || '',
           duration_minutes || 60,
           start_time ? new Date(start_time) : null,
           end_time ? new Date(end_time) : null,
-          is_published ? 1 : 0,
+          willPublish ? 1 : 0,
           examId,
         ]
       );
@@ -165,7 +199,7 @@ export class ExamService {
             await connection.query(
               `INSERT INTO questions (exam_id, question_text, max_score, order_index)
                VALUES (?, ?, ?, ?)`,
-              [examId, q.question_text, q.max_score || 100, i + 1]
+              [examId, q.question_text.trim(), q.max_score || 100, i + 1]
             );
           }
         }
@@ -178,6 +212,35 @@ export class ExamService {
     } finally {
       connection.release();
     }
+  }
+
+  public static async publishExam(examId: number, teacherId: number) {
+    const [exams] = await pool.query<RowDataPacket[]>(
+      `SELECT e.id, e.is_published, 
+              (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count
+       FROM exams e 
+       WHERE e.id = ? AND e.teacher_id = ?`,
+      [examId, teacherId]
+    );
+
+    if (exams.length === 0) {
+      const error: any = new Error('Exam not found or unauthorized');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const exam = exams[0];
+    if (exam.is_published) {
+      return; // Already published
+    }
+
+    if (exam.question_count === 0) {
+      const error: any = new Error('Cannot publish an examination without at least one question.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await pool.query('UPDATE exams SET is_published = 1 WHERE id = ?', [examId]);
   }
 
   public static async deleteExam(examId: number, teacherId: number) {
