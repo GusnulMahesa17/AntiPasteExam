@@ -5,20 +5,26 @@ export function createStudentModule(api, toast) {
   return {
     studentAnswers: {},
     activeSubmission: null,
+    examAccessKeys: {},   // keyed by exam.id — stores the student's typed access key per exam
 
-    async startExamSession(examId, telemetry) {
+    async startExamSession(examId, telemetry, accessKey = '') {
       const examDetails = await api(`/api/exams/${examId}`);
       const activeExam = examDetails.exam;
       activeExam.questions = examDetails.questions;
 
+      const keyToSend = (accessKey || this.examAccessKeys[examId] || '').trim();
+
       const subData = await api('/api/submissions/start', {
         method: 'POST',
-        body: JSON.stringify({ exam_id: examId }),
+        body: JSON.stringify({
+          exam_id: examId,
+          access_key: keyToSend,
+        }),
       });
 
       this.activeSubmission = subData.submission;
 
-      // Populate student answers structure
+      // Populate student answers structure from existing progress (resume support)
       this.studentAnswers = {};
       activeExam.questions.forEach((q) => {
         const existing = subData.answers?.find((a) => a.question_id === q.id);

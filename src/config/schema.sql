@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS exams (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     duration_minutes INT NOT NULL DEFAULT 60,
-    start_time DATETIME NULL,
-    end_time DATETIME NULL,
+    start_time DATETIME NULL,           -- When students can begin accessing the exam
+    end_time DATETIME NULL,             -- When the exam closes (no new submissions)
+    access_key VARCHAR(100) NULL,       -- Optional passcode required to start exam
     is_published BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE

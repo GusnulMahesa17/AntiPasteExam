@@ -37,6 +37,15 @@ function defineApp() {
       student: studentModule,
       telemetry: null,
 
+      // Modal state for student access key prompt
+      keyModal: {
+        isOpen: false,
+        examId: null,
+        examTitle: '',
+        inputKey: '',
+        error: '',
+      },
+
       init() {
         // Initialize telemetry engine with context
         this.telemetry = createTelemetryEngine(this, toast);
@@ -78,6 +87,7 @@ function defineApp() {
       get isReplaying() { return this.teacher?.isReplaying || false; },
       get studentAnswers() { return this.student?.studentAnswers || {}; },
       get activeSubmission() { return this.student?.activeSubmission || null; },
+      get examAccessKeys() { return this.student?.examAccessKeys || {}; },
       get examTimerSeconds() { return this.telemetry?.examTimerSeconds || 0; },
       get saveStatusText() { return this.telemetry?.saveStatusText || 'All changes saved'; },
 
@@ -182,9 +192,31 @@ function defineApp() {
       togglePlayback() { this.teacher.togglePlayback(); },
 
       // --------------- Student Actions ---------------
-      async startExam(examId) {
+      async startExam(examId, key = '') {
+        const exam = this.exams.find((e) => e.id === examId);
+        
+        // Check window status
+        if (exam) {
+          const win = this.getExamWindowStatus(exam);
+          if (win.state === 'upcoming') {
+            this.showToast('This exam has not started yet. ' + win.message, 'error');
+            return;
+          }
+          if (win.state === 'closed') {
+            this.showToast('This exam is closed and is no longer accepting submissions.', 'error');
+            return;
+          }
+
+          // If exam requires access key and none is provided yet, prompt via modal
+          if (exam.has_access_key && !key && !this.examAccessKeys[examId]) {
+            this.openAccessKeyModal(exam);
+            return;
+          }
+        }
+
         try {
-          this.activeExam = await this.student.startExamSession(examId, this.telemetry);
+          const keyToUse = key || this.examAccessKeys[examId] || '';
+          this.activeExam = await this.student.startExamSession(examId, this.telemetry, keyToUse);
           this.currentView = 'exam_room';
           this.telemetry.startSession(
             this.activeExam.duration_minutes,
@@ -193,7 +225,41 @@ function defineApp() {
           this.showToast('Examination session active. Anti-paste telemetry is running.', 'info');
         } catch (err) {
           console.error('Failed to start exam:', err);
+          // If error was incorrect access key, reopen modal with error
+          if (exam && exam.has_access_key) {
+            this.keyModal.isOpen = true;
+            this.keyModal.examId = exam.id;
+            this.keyModal.examTitle = exam.title;
+            this.keyModal.error = err.message || 'Incorrect access key';
+          }
         }
+      },
+
+      openAccessKeyModal(exam) {
+        this.keyModal = {
+          isOpen: true,
+          examId: exam.id,
+          examTitle: exam.title,
+          inputKey: this.examAccessKeys[exam.id] || '',
+          error: '',
+        };
+      },
+
+      closeAccessKeyModal() {
+        this.keyModal.isOpen = false;
+        this.keyModal.error = '';
+      },
+
+      async submitAccessKeyModal() {
+        if (!this.keyModal.inputKey.trim()) {
+          this.keyModal.error = 'Please enter the access key.';
+          return;
+        }
+        const examId = this.keyModal.examId;
+        const key = this.keyModal.inputKey.trim();
+        this.examAccessKeys[examId] = key;
+        this.closeAccessKeyModal();
+        await this.startExam(examId, key);
       },
 
       handlePasteAttempt(e, qId) { if (this.telemetry) this.telemetry.handlePasteAttempt(e, qId); },
@@ -216,6 +282,43 @@ function defineApp() {
 
       formatTime(sec) {
         return this.telemetry ? this.telemetry.formatTime(sec) : '00:00';
+      },
+
+      formatDateTime(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      },
+
+      getExamWindowStatus(exam) {
+        if (!exam) return { state: 'open', message: 'Open' };
+        const now = new Date();
+        if (exam.start_time && new Date(exam.start_time) > now) {
+          return {
+            state: 'upcoming',
+            message: 'Opens ' + this.formatDateTime(exam.start_time)
+          };
+        }
+        if (exam.end_time && new Date(exam.end_time) < now) {
+          return {
+            state: 'closed',
+            message: 'Closed on ' + this.formatDateTime(exam.end_time)
+          };
+        }
+        if (exam.end_time) {
+          return {
+            state: 'closing_soon',
+            message: 'Closes ' + this.formatDateTime(exam.end_time)
+          };
+        }
+        return { state: 'open', message: 'Always available' };
       },
     };
 

@@ -3,9 +3,9 @@ import { pool } from '../config/db.js';
 import { IntegrityService } from './integrityService.js';
 
 export class SubmissionService {
-  public static async startExamSession(studentId: number, examId: number) {
+  public static async startExamSession(studentId: number, examId: number, accessKey: string = '') {
     const [exams] = await pool.query<RowDataPacket[]>(
-      'SELECT id, is_published, duration_minutes FROM exams WHERE id = ?',
+      'SELECT id, is_published, duration_minutes, start_time, end_time, access_key FROM exams WHERE id = ?',
       [examId]
     );
 
@@ -14,6 +14,41 @@ export class SubmissionService {
       error.statusCode = 404;
       throw error;
     }
+
+    const exam = exams[0];
+    const now = new Date();
+
+    // ── Time window validation ──────────────────────────────────────────────
+    if (exam.start_time && new Date(exam.start_time) > now) {
+      const openAt = new Date(exam.start_time).toLocaleString();
+      const error: any = new Error(`This exam has not opened yet. It becomes available at: ${openAt}`);
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (exam.end_time && new Date(exam.end_time) < now) {
+      const error: any = new Error('This exam has already closed and is no longer accepting submissions.');
+      error.statusCode = 403;
+      throw error;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Access key validation ─────────────────────────────────────────────────
+    const requiredKey = exam.access_key?.trim() || null;
+    if (requiredKey) {
+      const providedKey = (accessKey || '').trim();
+      if (!providedKey) {
+        const error: any = new Error('This exam requires an access key to begin.');
+        error.statusCode = 403;
+        throw error;
+      }
+      if (providedKey !== requiredKey) {
+        const error: any = new Error('Incorrect access key. Please check and try again.');
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const [existing] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM submissions WHERE exam_id = ? AND student_id = ?',

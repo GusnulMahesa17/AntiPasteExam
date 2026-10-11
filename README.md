@@ -9,7 +9,10 @@ AntiPasteExam is a modern web-based examination platform designed to encourage a
 ## Features
 
 - **JWT Authentication & Roles**: Support for **Teacher** and **Student** accounts.
-- **Exam Management**: Teachers can create, configure, update, and publish essay examinations with custom time limits.
+- **Exam Management & Scheduling**:
+  - Teachers can create, configure, update, and publish essay examinations with custom time limits.
+  - **Access Key / Passcode Protection**: Teachers can set an optional exam key; students must enter the passcode to unlock and begin the assessment.
+  - **Date & Time Access Window**: Set specific start date/time (when the exam opens) and end date/time (when the exam closes).
 - **Student Exam Workspace**: Distraction-free exam room with countdown timer, autosave, and character/keystroke meters.
 - **Anti-Paste & Integrity Engine**:
   - Intercepts & blocks clipboard paste events.

@@ -4,11 +4,12 @@ import { pool } from '../config/db.js';
 export class ExamService {
   public static async getTeacherExams(teacherId: number) {
     const [exams] = await pool.query<RowDataPacket[]>(
-      `SELECT e.*, 
+      `SELECT e.*,
               (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count,
-              (SELECT COUNT(*) FROM submissions s WHERE s.exam_id = e.id) AS submission_count
-       FROM exams e 
-       WHERE e.teacher_id = ? 
+              (SELECT COUNT(*) FROM submissions s WHERE s.exam_id = e.id) AS submission_count,
+              (e.access_key IS NOT NULL AND e.access_key != '') AS has_access_key
+       FROM exams e
+       WHERE e.teacher_id = ?
        ORDER BY e.created_at DESC`,
       [teacherId]
     );
@@ -17,7 +18,9 @@ export class ExamService {
 
   public static async getStudentExams(studentId: number) {
     const [exams] = await pool.query<RowDataPacket[]>(
-      `SELECT e.id, e.title, e.description, e.duration_minutes, e.start_time, e.end_time, e.created_at,
+      `SELECT e.id, e.title, e.description, e.duration_minutes,
+              e.start_time, e.end_time, e.created_at,
+              (e.access_key IS NOT NULL AND e.access_key != '') AS has_access_key,
               u.name AS teacher_name,
               (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count,
               s.id AS submission_id,
@@ -38,7 +41,7 @@ export class ExamService {
     try {
       await connection.beginTransaction();
 
-      const { title, description, duration_minutes, start_time, end_time, is_published, questions } = data;
+      const { title, description, duration_minutes, start_time, end_time, access_key, is_published, questions } = data;
 
       if (!title || !title.trim()) {
         const error: any = new Error('Title is required');
@@ -53,9 +56,11 @@ export class ExamService {
         throw error;
       }
 
+      const cleanKey = access_key?.trim() || null;
+
       const [examResult] = await connection.query<ResultSetHeader>(
-        `INSERT INTO exams (teacher_id, title, description, duration_minutes, start_time, end_time, is_published)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO exams (teacher_id, title, description, duration_minutes, start_time, end_time, access_key, is_published)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           teacherId,
           title.trim(),
@@ -63,6 +68,7 @@ export class ExamService {
           duration_minutes || 60,
           start_time ? new Date(start_time) : null,
           end_time ? new Date(end_time) : null,
+          cleanKey,
           willPublish ? 1 : 0,
         ]
       );
@@ -95,9 +101,10 @@ export class ExamService {
   public static async getExamDetails(examId: number, userId: number, userRole: string) {
     const [examRows] = await pool.query<RowDataPacket[]>(
       `SELECT e.*, u.name AS teacher_name,
-              (SELECT COUNT(*) FROM submissions s WHERE s.exam_id = e.id) AS submission_count
-       FROM exams e 
-       JOIN users u ON e.teacher_id = u.id 
+              (SELECT COUNT(*) FROM submissions s WHERE s.exam_id = e.id) AS submission_count,
+              (e.access_key IS NOT NULL AND e.access_key != '') AS has_access_key
+       FROM exams e
+       JOIN users u ON e.teacher_id = u.id
        WHERE e.id = ?`,
       [examId]
     );
@@ -117,10 +124,15 @@ export class ExamService {
       throw error;
     }
 
+    // Strip the raw access_key for students (only expose the boolean flag)
+    if (userRole === 'student') {
+      delete exam.access_key;
+    }
+
     const [questions] = await pool.query<RowDataPacket[]>(
-      `SELECT id, question_text, max_score, order_index 
-       FROM questions 
-       WHERE exam_id = ? 
+      `SELECT id, question_text, max_score, order_index
+       FROM questions
+       WHERE exam_id = ?
        ORDER BY order_index ASC`,
       [examId]
     );
@@ -144,12 +156,12 @@ export class ExamService {
     try {
       await connection.beginTransaction();
 
-      const { title, description, duration_minutes, start_time, end_time, is_published, questions } = data;
+      const { title, description, duration_minutes, start_time, end_time, access_key, is_published, questions } = data;
 
       const [exams] = await connection.query<RowDataPacket[]>(
-        `SELECT id, is_published, 
-                (SELECT COUNT(*) FROM submissions WHERE exam_id = ?) AS submission_count 
-         FROM exams 
+        `SELECT id, is_published,
+                (SELECT COUNT(*) FROM submissions WHERE exam_id = ?) AS submission_count
+         FROM exams
          WHERE id = ? AND teacher_id = ?`,
         [examId, examId, teacherId]
       );
@@ -176,9 +188,11 @@ export class ExamService {
         throw error;
       }
 
+      const cleanKey = access_key?.trim() || null;
+
       await connection.query(
-        `UPDATE exams 
-         SET title = ?, description = ?, duration_minutes = ?, start_time = ?, end_time = ?, is_published = ?
+        `UPDATE exams
+         SET title = ?, description = ?, duration_minutes = ?, start_time = ?, end_time = ?, access_key = ?, is_published = ?
          WHERE id = ?`,
         [
           title.trim(),
@@ -186,6 +200,7 @@ export class ExamService {
           duration_minutes || 60,
           start_time ? new Date(start_time) : null,
           end_time ? new Date(end_time) : null,
+          cleanKey,
           willPublish ? 1 : 0,
           examId,
         ]
@@ -216,9 +231,9 @@ export class ExamService {
 
   public static async publishExam(examId: number, teacherId: number) {
     const [exams] = await pool.query<RowDataPacket[]>(
-      `SELECT e.id, e.is_published, 
+      `SELECT e.id, e.is_published,
               (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count
-       FROM exams e 
+       FROM exams e
        WHERE e.id = ? AND e.teacher_id = ?`,
       [examId, teacherId]
     );

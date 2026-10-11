@@ -48,6 +48,15 @@ export const initDatabase = async (): Promise<void> => {
         await connection.query(schemaSql);
         console.log('✅ Database schema initialized successfully');
 
+        // ── Runtime migrations (safe for existing databases) ───────────────
+        // Add access_key column if it doesn't exist yet (MySQL 8+ supports IF NOT EXISTS for columns)
+        try {
+          await connection.query(
+            `ALTER TABLE exams ADD COLUMN IF NOT EXISTS access_key VARCHAR(100) NULL AFTER end_time`
+          );
+        } catch (_) { /* column already exists in older MySQL — ignore */ }
+        // ─────────────────────────────────────────────────────────────────────
+
         // Seed demo accounts if not present
         const [users] = await connection.query<any[]>('SELECT id, email FROM users LIMIT 2');
         if (users.length === 0) {

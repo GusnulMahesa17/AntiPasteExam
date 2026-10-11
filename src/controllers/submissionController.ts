@@ -5,14 +5,14 @@ import { SubmissionService } from '../services/submissionService.js';
 export const startSubmission = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const studentId = req.user!.id;
-    const { exam_id } = req.body;
+    const { exam_id, access_key } = req.body;
 
     if (!exam_id) {
       res.status(400).json({ error: 'exam_id is required' });
       return;
     }
 
-    const { submission, answers } = await SubmissionService.startExamSession(studentId, exam_id);
+    const { submission, answers } = await SubmissionService.startExamSession(studentId, exam_id, access_key || '');
 
     res.status(200).json({
       message: 'Exam session active',

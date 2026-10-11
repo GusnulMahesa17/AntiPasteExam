@@ -24,6 +24,7 @@ export interface Exam {
   duration_minutes: number;
   start_time?: Date | null;
   end_time?: Date | null;
+  access_key?: string | null;
   is_published: boolean;
   created_at: Date;
 }

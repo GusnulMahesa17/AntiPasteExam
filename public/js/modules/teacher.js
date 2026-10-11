@@ -4,6 +4,16 @@
 export function createTeacherModule(api, toast) {
   let playbackTimer = null;
 
+  /** Convert a DB datetime string → HTML datetime-local value (YYYY-MM-DDTHH:MM) */
+  function toDatetimeLocal(dbStr) {
+    if (!dbStr) return '';
+    const d = new Date(dbStr);
+    if (isNaN(d.getTime())) return '';
+    // Offset to local time for the input
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+  }
+
   return {
     isEditingExam: false,
     examForm: {
@@ -11,7 +21,10 @@ export function createTeacherModule(api, toast) {
       title: '',
       description: '',
       duration_minutes: 45,
-      is_published: false, // Default to draft for safety
+      start_time: '',       // datetime-local string (YYYY-MM-DDTHH:MM), empty = no restriction
+      end_time: '',         // datetime-local string, empty = no restriction
+      access_key: '',       // optional passcode, empty = no key required
+      is_published: false,
       questions: [{ question_text: '', max_score: 100 }],
     },
     currentSubmissionsList: [],
@@ -26,6 +39,9 @@ export function createTeacherModule(api, toast) {
         title: '',
         description: '',
         duration_minutes: 45,
+        start_time: '',
+        end_time: '',
+        access_key: '',
         is_published: false,
         questions: [{ question_text: '', max_score: 100 }],
       };
@@ -48,6 +64,9 @@ export function createTeacherModule(api, toast) {
           title: data.exam.title,
           description: data.exam.description || '',
           duration_minutes: data.exam.duration_minutes || 45,
+          start_time: toDatetimeLocal(data.exam.start_time),
+          end_time: toDatetimeLocal(data.exam.end_time),
+          access_key: data.exam.access_key || '',
           is_published: false,
           questions: (data.questions && data.questions.length > 0)
             ? data.questions.map((q) => ({ question_text: q.question_text, max_score: q.max_score || 100 }))
@@ -109,15 +128,23 @@ export function createTeacherModule(api, toast) {
         return false;
       }
 
-      // Validate questions have text
+      // Validate all questions have text
       const hasEmpty = this.examForm.questions.some((q) => !q.question_text || !q.question_text.trim());
       if (hasEmpty) {
         toast('All questions must contain text before saving.', 'error');
         return false;
       }
 
-      // forcePublish = true means the "Publish" button was clicked explicitly
-      // forcePublish = false means "Save Draft" was clicked — never publish regardless of existing state
+      // Validate time window logic
+      if (this.examForm.start_time && this.examForm.end_time) {
+        if (new Date(this.examForm.start_time) >= new Date(this.examForm.end_time)) {
+          toast('End time must be after start time.', 'error');
+          return false;
+        }
+      }
+
+      // forcePublish = true  → "Publish" button clicked
+      // forcePublish = false → "Save Draft" button clicked — always stays draft
       const willPublish = forcePublish;
 
       if (willPublish) {
@@ -136,6 +163,10 @@ export function createTeacherModule(api, toast) {
       const payload = {
         ...this.examForm,
         is_published: willPublish,
+        // Send null instead of empty string for optional datetime fields
+        start_time: this.examForm.start_time || null,
+        end_time: this.examForm.end_time || null,
+        access_key: this.examForm.access_key?.trim() || null,
       };
 
       try {
