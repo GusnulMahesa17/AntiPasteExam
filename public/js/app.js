@@ -37,6 +37,12 @@ function defineApp() {
       student: studentModule,
       telemetry: null,
 
+      // Join exam by key workflow state
+      studentJoinKey: '',
+      verifiedExam: null,
+      isVerifyingKey: false,
+      keyVerificationError: '',
+
       // Modal state for student access key prompt
       keyModal: {
         isOpen: false,
@@ -192,8 +198,56 @@ function defineApp() {
       togglePlayback() { this.teacher.togglePlayback(); },
 
       // --------------- Student Actions ---------------
+      async verifyAndUnlockExam(keyToVerify) {
+        const key = (keyToVerify !== undefined ? keyToVerify : this.studentJoinKey || '').trim();
+        if (!key) {
+          this.keyVerificationError = 'Please enter an examination access key.';
+          return;
+        }
+
+        this.isVerifyingKey = true;
+        this.keyVerificationError = '';
+
+        try {
+          const verified = await this.student.verifyAccessKey(key);
+          this.verifiedExam = verified;
+          this.studentJoinKey = key;
+          this.examAccessKeys[verified.id] = key;
+          
+          // Also update or add to exams list if not already present
+          const existingIdx = this.exams.findIndex((e) => e.id === verified.id);
+          if (existingIdx !== -1) {
+            this.exams[existingIdx] = { ...this.exams[existingIdx], ...verified };
+          } else {
+            this.exams.unshift(verified);
+          }
+
+          this.showToast(`Found: "${verified.title}"`, 'success');
+        } catch (err) {
+          console.error('Failed to verify access key:', err);
+          this.verifiedExam = null;
+          this.keyVerificationError = err.message || 'Invalid examination key. Please check and try again.';
+          this.showToast(this.keyVerificationError, 'error');
+        } finally {
+          this.isVerifyingKey = false;
+        }
+      },
+
+      clearVerifiedExam() {
+        this.verifiedExam = null;
+        this.studentJoinKey = '';
+        this.keyVerificationError = '';
+      },
+
+      async startVerifiedExam() {
+        if (!this.verifiedExam) return;
+        const exam = this.verifiedExam;
+        const key = this.studentJoinKey || this.examAccessKeys[exam.id] || '';
+        await this.startExam(exam.id, key);
+      },
+
       async startExam(examId, key = '') {
-        const exam = this.exams.find((e) => e.id === examId);
+        const exam = this.exams.find((e) => e.id === examId) || (this.verifiedExam?.id === examId ? this.verifiedExam : null);
         
         // Check window status
         if (exam) {
@@ -235,14 +289,18 @@ function defineApp() {
         }
       },
 
-      openAccessKeyModal(exam) {
+      openPasscodeModal(exam = null) {
         this.keyModal = {
           isOpen: true,
-          examId: exam.id,
-          examTitle: exam.title,
-          inputKey: this.examAccessKeys[exam.id] || '',
+          examId: exam ? exam.id : null,
+          examTitle: exam ? exam.title : 'Access Examination',
+          inputKey: exam ? (this.examAccessKeys[exam.id] || '') : (this.studentJoinKey || ''),
           error: '',
         };
+      },
+
+      openAccessKeyModal(exam) {
+        this.openPasscodeModal(exam);
       },
 
       closeAccessKeyModal() {
@@ -251,15 +309,35 @@ function defineApp() {
       },
 
       async submitAccessKeyModal() {
-        if (!this.keyModal.inputKey.trim()) {
-          this.keyModal.error = 'Please enter the access key.';
+        const key = (this.keyModal.inputKey || '').trim();
+        if (!key) {
+          this.keyModal.error = 'Please enter an examination passcode.';
           return;
         }
-        const examId = this.keyModal.examId;
-        const key = this.keyModal.inputKey.trim();
-        this.examAccessKeys[examId] = key;
-        this.closeAccessKeyModal();
-        await this.startExam(examId, key);
+
+        try {
+          const verified = await this.student.verifyAccessKey(key);
+          this.verifiedExam = verified;
+          this.studentJoinKey = key;
+          this.examAccessKeys[verified.id] = key;
+
+          // Add or update exam in student exams list
+          const existingIdx = this.exams.findIndex((e) => e.id === verified.id);
+          if (existingIdx !== -1) {
+            this.exams[existingIdx] = { ...this.exams[existingIdx], ...verified };
+          } else {
+            this.exams.unshift(verified);
+          }
+
+          this.closeAccessKeyModal();
+          this.showToast(`Passcode verified! Examination unlocked: "${verified.title}"`, 'success');
+
+          setTimeout(() => {
+            document.getElementById('unlocked-exam-section')?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        } catch (err) {
+          this.keyModal.error = err.message || 'Invalid examination passcode. Please check with your teacher.';
+        }
       },
 
       handlePasteAttempt(e, qId) { if (this.telemetry) this.telemetry.handlePasteAttempt(e, qId); },

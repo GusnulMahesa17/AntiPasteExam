@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getExams, createExam, getExamById, updateExam, publishExam, deleteExam } from '../controllers/examController.js';
+import { getExams, verifyExamKey, createExam, getExamById, updateExam, publishExam, deleteExam } from '../controllers/examController.js';
 import { authenticateJWT, requireRole } from '../middlewares/auth.js';
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticateJWT);
 
 router.get('/', getExams);
+router.post('/verify-key', verifyExamKey);
 router.post('/', requireRole('teacher'), createExam);
 router.get('/:id', getExamById);
 router.put('/:id', requireRole('teacher'), updateExam);

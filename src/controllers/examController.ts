@@ -15,6 +15,23 @@ export const getExams = async (req: AuthenticatedRequest, res: Response): Promis
   }
 };
 
+export const verifyExamKey = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { key } = req.body;
+    const user = req.user!;
+
+    if (!key || !key.trim()) {
+      res.status(400).json({ error: 'Please enter an examination access key.' });
+      return;
+    }
+
+    const exam = await ExamService.verifyExamKey(key.trim(), user.id);
+    res.status(200).json({ success: true, exam });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to verify examination key.' });
+  }
+};
+
 export const createExam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const teacherId = req.user!.id;

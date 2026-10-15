@@ -725,3 +725,134 @@ tr:hover td {
     transform: scale(1) translateY(0);
   }
 }
+
+/* Student Join Exam by Key Workflow */
+.student-join-section {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary-border);
+  border-radius: var(--rounded-md);
+  padding: 1.75rem 2rem;
+  margin-bottom: 2.25rem;
+  box-shadow: 0 4px 20px rgba(66, 133, 244, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.student-join-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-neutral) 100%);
+}
+
+.join-key-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.join-key-input-container {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+}
+
+.join-key-input-container svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  stroke: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.join-key-input {
+  padding-left: 42px !important;
+  font-family: var(--font-family-mono);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  height: 46px;
+}
+
+.unlocked-exam-card {
+  background: #FFFFFF;
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--rounded-md);
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 8px 30px rgba(52, 168, 83, 0.12);
+  animation: slide-in-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unlocked-exam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.flexible-time-banner {
+  background: linear-gradient(135deg, var(--color-neutral-subtle) 0%, #f0fdf4 100%);
+  border: 1.5px solid var(--color-neutral-border);
+  border-radius: var(--rounded-sm);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scheduled-time-banner {
+  background: linear-gradient(135deg, var(--color-tertiary-subtle) 0%, #fffbeb 100%);
+  border: 1.5px solid var(--color-tertiary-border);
+  border-radius: var(--rounded-sm);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exam-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 1rem 0;
+}
+
+.exam-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--rounded-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-body);
+}
+

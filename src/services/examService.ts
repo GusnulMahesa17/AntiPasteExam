@@ -16,6 +16,55 @@ export class ExamService {
     return exams;
   }
 
+  public static async verifyExamKey(accessKey: string, studentId: number) {
+    const cleanKey = (accessKey || '').trim();
+    if (!cleanKey) {
+      const error: any = new Error('Access key cannot be empty.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT e.id, e.title, e.description, e.duration_minutes,
+              e.start_time, e.end_time, e.created_at,
+              TRUE AS has_access_key,
+              u.name AS teacher_name,
+              (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count,
+              s.id AS submission_id,
+              s.status AS submission_status,
+              s.overall_integrity_score
+       FROM exams e
+       JOIN users u ON e.teacher_id = u.id
+       LEFT JOIN submissions s ON s.exam_id = e.id AND s.student_id = ?
+       WHERE e.is_published = TRUE AND LOWER(TRIM(e.access_key)) = LOWER(?)`,
+      [studentId, cleanKey]
+    );
+
+    if (rows.length === 0) {
+      const error: any = new Error('Invalid examination key. No active published exam matches this passcode.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const exam = rows[0];
+    const now = new Date();
+
+    const isFlexibleTime = !exam.start_time;
+    let windowState: 'open' | 'upcoming' | 'closed' = 'open';
+    if (exam.start_time && new Date(exam.start_time) > now) {
+      windowState = 'upcoming';
+    } else if (exam.end_time && new Date(exam.end_time) < now) {
+      windowState = 'closed';
+    }
+
+    return {
+      ...exam,
+      is_flexible_time: isFlexibleTime,
+      window_state: windowState,
+      can_start: windowState === 'open' && exam.submission_status !== 'submitted',
+    };
+  }
+
   public static async getStudentExams(studentId: number) {
     const [exams] = await pool.query<RowDataPacket[]>(
       `SELECT e.id, e.title, e.description, e.duration_minutes,
@@ -30,6 +79,11 @@ export class ExamService {
        JOIN users u ON e.teacher_id = u.id
        LEFT JOIN submissions s ON s.exam_id = e.id AND s.student_id = ?
        WHERE e.is_published = TRUE
+         AND (
+           e.access_key IS NULL 
+           OR TRIM(e.access_key) = '' 
+           OR s.id IS NOT NULL
+         )
        ORDER BY e.created_at DESC`,
       [studentId]
     );

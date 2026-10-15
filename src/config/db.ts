@@ -54,6 +54,9 @@ export const initDatabase = async (): Promise<void> => {
           await connection.query(
             `ALTER TABLE exams ADD COLUMN IF NOT EXISTS access_key VARCHAR(100) NULL AFTER end_time`
           );
+          await connection.query(
+            `UPDATE exams SET access_key = 'ETHICS-2026' WHERE (access_key IS NULL OR access_key = '') AND id = 1`
+          );
         } catch (_) { /* column already exists in older MySQL — ignore */ }
         // ─────────────────────────────────────────────────────────────────────
 
@@ -77,13 +80,14 @@ export const initDatabase = async (): Promise<void> => {
           // Seed a sample exam
           const teacherId = teacherResult.insertId;
           const [examResult]: any = await connection.query(
-            `INSERT INTO exams (teacher_id, title, description, duration_minutes, is_published) 
-             VALUES (?, ?, ?, ?, ?)`,
+            `INSERT INTO exams (teacher_id, title, description, duration_minutes, access_key, is_published) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
             [
               teacherId,
               'Modern History & Ethics Midterm Exam',
               'Please answer the following essay questions with your own thoughts and analysis. All copy/paste actions are monitored.',
               45,
+              'ETHICS-2026',
               1,
             ]
           );
