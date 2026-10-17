@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AntiPasteExam</title>
+  <meta name="description" content="AntiPasteExam is a modern examination platform designed to verify authentic student responses through typing telemetry, paste detection, and snapshot history." />
+  
+  <!-- Typography (DESIGN.md: Roboto & JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Modular ES Application & Alpine.js -->
+  <script type="module" src="/js/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+</head>
+<body x-data="app">
+
+  <!-- SVG Icon Definitions System (No Emojis in UI) -->
+  <!-- @include partials/icons.svg.html -->
+
+  <!-- @include partials/navbar.html -->
+
+  <!-- @include partials/toast.html -->
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- @include partials/landing.html -->
+
+    <!-- @include partials/teacher-dashboard.html -->
+
+    <!-- @include partials/teacher-exam-editor.html -->
+
+    <!-- @include partials/teacher-submissions.html -->
+
+    <!-- @include partials/student-dashboard.html -->
+
+    <!-- @include partials/student-exam-room.html -->
+
+    <!-- @include partials/teacher-audit.html -->
+
+    <!-- @include partials/passcode-modal.html -->
+
+  </main>
+</body>
+</html>

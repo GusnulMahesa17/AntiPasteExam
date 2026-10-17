@@ -1,0 +1,117 @@
+    <!-- 7. FORENSIC AUDIT & SNAPSHOT REPLAY VIEW -->
+    <template x-if="currentView === 'submission_audit' && selectedSubmission">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <button @click="currentView = 'dashboard'" class="btn btn-secondary btn-sm" style="margin-bottom: 0.75rem;">
+              ← Back to Overview
+            </button>
+            <h1 class="section-title">Forensic Audit Log</h1>
+            <p class="text-muted" x-text="'Exam: ' + selectedSubmission.submission.exam_title + ' | Student: ' + selectedSubmission.submission.student_name"></p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div>
+              <div class="stat-label">Calculated Integrity Score</div>
+              <div class="stat-val" 
+                   :style="selectedSubmission.submission.overall_integrity_score >= 80 ? 'color: var(--color-neutral);' : (selectedSubmission.submission.overall_integrity_score >= 50 ? 'color: var(--color-tertiary);' : 'color: var(--color-secondary);')"
+                   x-text="selectedSubmission.submission.overall_integrity_score + '%'">
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <div class="stat-box">
+                <div class="stat-label">Submitted Answers</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700;" x-text="selectedSubmission.answers.length"></div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Flagged Events</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700; color: var(--color-secondary);" x-text="selectedSubmission.events.length"></div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Timeline Snapshots</div>
+                <div class="text-mono" style="font-size: 1.25rem; font-weight: 700;" x-text="selectedSubmission.snapshots.length"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template x-if="selectedSubmission.snapshots && selectedSubmission.snapshots.length > 0">
+          <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="font-size: 1.125rem;">Visual Typing Reconstruction</h3>
+                <p class="text-muted" style="font-size: 0.875rem;">Step-by-step playback of how the student formulated the response over time.</p>
+              </div>
+              <button @click="togglePlayback()" class="btn btn-primary btn-sm">
+                <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;">
+                  <use :href="isReplaying ? '#icon-pause' : '#icon-play'" />
+                </svg>
+                <span x-text="isReplaying ? 'Pause Playback' : 'Play Timeline'"></span>
+              </button>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <input 
+                type="range" 
+                min="0" 
+                :max="selectedSubmission.snapshots.length - 1" 
+                x-model="auditSnapshotIndex" 
+                style="width: 100%; accent-color: var(--color-primary);" 
+              />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">
+                <span>Start Session</span>
+                <span class="text-mono" x-text="'Frame ' + (parseInt(auditSnapshotIndex) + 1) + ' of ' + selectedSubmission.snapshots.length + ' (' + selectedSubmission.snapshots[auditSnapshotIndex]?.time_offset_seconds + 's elapsed)'"></span>
+                <span>Final Submission</span>
+              </div>
+            </div>
+
+            <div class="playback-console" x-text="selectedSubmission.snapshots[auditSnapshotIndex]?.snapshot_text || 'No text recorded in this frame.'"></div>
+          </div>
+        </template>
+
+        <div style="margin-bottom: 2rem;">
+          <h3 class="sub-title">Submitted Essay Responses</h3>
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <template x-for="ans in selectedSubmission.answers" :key="ans.id">
+              <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                  <h4 x-text="'Question: ' + ans.question_text"></h4>
+                  <span class="badge" :class="ans.integrity_score >= 80 ? 'badge-neutral' : 'badge-error'" x-text="'Integrity: ' + ans.integrity_score + '%'"></span>
+                </div>
+
+                <div style="background: var(--color-surface-variant); border: 1px solid var(--color-border); border-radius: var(--rounded-sm); padding: 1.25rem; margin-bottom: 1rem; white-space: pre-wrap; font-size: 0.9375rem; line-height: 1.6;" x-text="ans.content"></div>
+
+                <div style="display: flex; gap: 2rem; font-size: 0.8125rem; color: var(--color-text-muted); flex-wrap: wrap;">
+                  <div>Keystrokes: <strong class="text-mono" style="color: var(--color-text-main);" x-text="ans.total_keystrokes"></strong></div>
+                  <div>Paste Count: <strong class="text-mono" :style="ans.paste_count > 0 ? 'color: var(--color-secondary);' : ''" x-text="ans.paste_count"></strong></div>
+                  <div>Large Injections: <strong class="text-mono" :style="ans.text_injection_count > 0 ? 'color: var(--color-secondary);' : ''" x-text="ans.text_injection_count"></strong></div>
+                  <div>Active Typing Duration: <strong class="text-mono" style="color: var(--color-text-main);" x-text="ans.typing_duration_seconds + 's'"></strong></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="sub-title" style="margin-bottom: 1rem;">Security Events Log</h3>
+          <template x-if="selectedSubmission.events.length === 0">
+            <div style="color: var(--color-text-muted); font-size: 0.9375rem;">No security violations or anomalous paste actions recorded. Perfectly authentic session.</div>
+          </template>
+          <template x-if="selectedSubmission.events.length > 0">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <template x-for="ev in selectedSubmission.events" :key="ev.id">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--color-secondary-subtle); border: 1px solid var(--color-secondary-border); border-radius: var(--rounded-sm); font-size: 0.875rem;">
+                  <div>
+                    <strong style="color: var(--color-secondary);" x-text="ev.event_type.toUpperCase()"></strong>
+                    <span style="color: var(--color-text-body); margin-left: 8px;" x-text="typeof ev.event_data === 'object' ? JSON.stringify(ev.event_data) : ev.event_data"></span>
+                  </div>
+                  <span class="text-mono" style="color: var(--color-text-muted); font-size: 0.8125rem;" x-text="new Date(ev.detected_at).toLocaleTimeString()"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>

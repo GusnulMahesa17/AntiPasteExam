@@ -1,0 +1,312 @@
+    <!-- 5. STUDENT DASHBOARD VIEW (KEY-BASED JOIN & FLEXIBLE TIME WORKFLOW) -->
+    <template x-if="user && user.role === 'student' && currentView === 'dashboard'">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="badge badge-neutral" style="margin-bottom: 0.5rem;">
+              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
+              <span>Student Portal</span>
+            </div>
+            <h1 class="section-title">Examination Portal</h1>
+            <p class="text-muted">Examinations are protected and do not appear before entering your passcode. Click the button to enter your passcode.</p>
+          </div>
+
+          <!-- Feature Button: Enter Passcode to Access Exam -->
+          <button @click="openPasscodeModal()" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);">
+            <svg class="icon" style="stroke: #fff; width: 18px; height: 18px;"><use href="#icon-key" /></svg>
+            <span>Enter Passcode to Access Exam</span>
+          </button>
+        </div>
+
+        <!-- 1. ENTER KEY SECTION -->
+        <div class="student-join-section">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span class="badge badge-primary">
+                  <svg class="icon" style="width: 13px; height: 13px;"><use href="#icon-key" /></svg>
+                  <span>Access Verification</span>
+                </span>
+              </div>
+              <h2 style="font-size: 1.35rem; margin-bottom: 4px;">Enter Examination Key</h2>
+              <p class="text-muted" style="font-size: 0.9375rem; margin: 0;">Type the unique access key provided by your teacher to locate and unlock your exam.</p>
+            </div>
+          </div>
+
+          <form @submit.prevent="verifyAndUnlockExam()">
+            <div class="join-key-row">
+              <div class="join-key-input-container">
+                <svg class="icon"><use href="#icon-key" /></svg>
+                <input 
+                  type="text" 
+                  class="form-control join-key-input"
+                  x-model="studentJoinKey"
+                  placeholder="ENTER ACCESS KEY"
+                  autocomplete="off"
+                  required
+                />
+              </div>
+              <button 
+                type="submit" 
+                class="btn btn-primary" 
+                style="min-width: 160px; height: 46px;"
+                :disabled="isVerifyingKey"
+              >
+                <svg class="icon" style="stroke: #fff;" x-show="!isVerifyingKey"><use href="#icon-check" /></svg>
+                <span x-text="isVerifyingKey ? 'Verifying...' : 'Unlock Exam'"></span>
+              </button>
+              <button 
+                type="button" 
+                @click="clearVerifiedExam()" 
+                class="btn btn-secondary" 
+                x-show="verifiedExam"
+                style="height: 46px;"
+                title="Clear current selection"
+              >
+                Clear
+              </button>
+            </div>
+          </form>
+
+          <!-- Key Verification Error Notice -->
+          <template x-if="keyVerificationError">
+            <div style="margin-top: 1rem; padding: 0.75rem 1rem; background: var(--color-secondary-subtle); border: 1px solid var(--color-secondary-border); border-radius: var(--rounded-sm); color: var(--color-secondary); font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
+              <svg class="icon" style="width: 16px; height: 16px; stroke: var(--color-secondary);"><use href="#icon-alert" /></svg>
+              <span x-text="keyVerificationError"></span>
+            </div>
+          </template>
+        </div>
+
+        <!-- 2. IF TRUE: EXAM APPEARS -->
+        <template x-if="verifiedExam">
+          <div id="unlocked-exam-section" class="unlocked-exam-card">
+            <!-- Header -->
+            <div class="unlocked-exam-header">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <span class="badge badge-neutral">
+                    <svg class="icon" style="width: 12px; height: 12px;"><use href="#icon-check" /></svg>
+                    <span>Key Verified — Exam Unlocked</span>
+                  </span>
+                  <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="'Instructor: ' + verifiedExam.teacher_name"></span>
+                </div>
+                <h2 style="font-size: 1.6rem; color: var(--color-text-main); margin-bottom: 0.5rem;" x-text="verifiedExam.title"></h2>
+                <p style="color: var(--color-text-body); font-size: 0.95rem; max-width: 800px; line-height: 1.6;" x-text="verifiedExam.description || 'No additional instructions provided.'"></p>
+              </div>
+
+              <div>
+                <button @click="clearVerifiedExam()" class="btn btn-secondary btn-sm" title="Dismiss preview">
+                  &times; Close
+                </button>
+              </div>
+            </div>
+
+            <!-- Meta Pills -->
+            <div class="exam-meta-pills">
+              <div class="exam-meta-pill">
+                <svg class="icon" style="width: 14px; height: 14px; stroke: var(--color-primary);"><use href="#icon-clock" /></svg>
+                <span>Duration: <strong class="text-mono" x-text="verifiedExam.duration_minutes + ' Minutes'"></strong></span>
+              </div>
+              <div class="exam-meta-pill">
+                <svg class="icon" style="width: 14px; height: 14px; stroke: var(--color-neutral);"><use href="#icon-file-text" /></svg>
+                <span>Questions: <strong class="text-mono" x-text="(verifiedExam.question_count || 0) + ' Essay Questions'"></strong></span>
+              </div>
+              <div class="exam-meta-pill">
+                <svg class="icon" style="width: 14px; height: 14px; stroke: var(--color-secondary);"><use href="#icon-shield" /></svg>
+                <span>Anti-Paste Telemetry Active</span>
+              </div>
+            </div>
+
+            <!-- 3. START EXAM IF START TIME IS NOT SET (FLEXIBLE TIME) -->
+            <!-- Case A: Flexible Time (start_time is NOT set) -->
+            <template x-if="!verifiedExam.start_time">
+              <div class="flexible-time-banner">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--color-neutral-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="icon" style="stroke: var(--color-neutral); width: 20px; height: 20px;"><use href="#icon-activity" /></svg>
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; color: #1e7e34; font-size: 0.95rem;">
+                    Flexible Time — No Fixed Start Time Required
+                  </div>
+                  <div style="font-size: 0.85rem; color: var(--color-text-body); margin-top: 2px;">
+                    This examination has an open, flexible schedule. You can start whenever you are prepared. Your <strong class="text-mono" x-text="verifiedExam.duration_minutes + ' minute'"></strong> countdown timer will activate once you click start.
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Case B: Fixed Schedule (start_time IS set) -->
+            <template x-if="verifiedExam.start_time">
+              <div>
+                <!-- Upcoming (Future start time) -->
+                <template x-if="new Date(verifiedExam.start_time) > new Date()">
+                  <div class="scheduled-time-banner">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--color-tertiary-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg class="icon" style="stroke: #b06000; width: 20px; height: 20px;"><use href="#icon-clock" /></svg>
+                    </div>
+                    <div style="flex: 1;">
+                      <div style="font-weight: 700; color: #b06000; font-size: 0.95rem;">
+                        Scheduled Start Time: <span class="text-mono" x-text="formatDateTime(verifiedExam.start_time)"></span>
+                      </div>
+                      <div style="font-size: 0.85rem; color: var(--color-text-body); margin-top: 2px;">
+                        This exam cannot be started yet because a fixed start time is set. You will be able to begin once the start time arrives.
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Currently active (Passed start time) -->
+                <template x-if="new Date(verifiedExam.start_time) <= new Date() && (!verifiedExam.end_time || new Date(verifiedExam.end_time) >= new Date())">
+                  <div class="flexible-time-banner">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--color-neutral-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg class="icon" style="stroke: var(--color-neutral); width: 20px; height: 20px;"><use href="#icon-check" /></svg>
+                    </div>
+                    <div style="flex: 1;">
+                      <div style="font-weight: 700; color: #1e7e34; font-size: 0.95rem;">
+                        Exam is Currently Open
+                      </div>
+                      <div style="font-size: 0.85rem; color: var(--color-text-body); margin-top: 2px;">
+                        The scheduled opening time has arrived. You may begin your examination now.
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Actions Row -->
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 1.5rem; flex-wrap: wrap;">
+              <template x-if="verifiedExam.submission_status === 'submitted'">
+                <button @click="openSubmissionAudit(verifiedExam.submission_id)" class="btn btn-secondary">
+                  <svg class="icon"><use href="#icon-eye" /></svg>
+                  <span>View Submitted Audit Log</span>
+                </button>
+              </template>
+
+              <template x-if="verifiedExam.submission_status !== 'submitted'">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <!-- If start time is NOT set (Flexible Time): Direct Start -->
+                  <template x-if="!verifiedExam.start_time">
+                    <button 
+                      @click="startVerifiedExam()" 
+                      class="btn btn-success btn-lg"
+                      style="box-shadow: 0 4px 16px rgba(52, 168, 83, 0.35);"
+                    >
+                      <svg class="icon" style="stroke: #fff;"><use href="#icon-play" /></svg>
+                      <span x-text="verifiedExam.submission_status === 'in_progress' ? 'Resume Examination' : 'Start Examination (Flexible Time)'"></span>
+                    </button>
+                  </template>
+
+                  <!-- If start time IS set: check window state -->
+                  <template x-if="verifiedExam.start_time">
+                    <div>
+                      <template x-if="new Date(verifiedExam.start_time) > new Date()">
+                        <button class="btn btn-secondary btn-lg" disabled style="cursor: not-allowed; opacity: 0.65;">
+                          <svg class="icon"><use href="#icon-clock" /></svg>
+                          <span x-text="'Opens at ' + formatDateTime(verifiedExam.start_time)"></span>
+                        </button>
+                      </template>
+                      <template x-if="new Date(verifiedExam.start_time) <= new Date()">
+                        <button @click="startVerifiedExam()" class="btn btn-success btn-lg">
+                          <svg class="icon" style="stroke: #fff;"><use href="#icon-play" /></svg>
+                          <span x-text="verifiedExam.submission_status === 'in_progress' ? 'Resume Examination' : 'Start Examination'"></span>
+                        </button>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+
+          </div>
+        </template>
+
+        <!-- 3. ALL AVAILABLE & ENROLLED EXAMINATIONS ROSTER -->
+        <div style="margin-top: 2rem;">
+          <template x-if="exams.length > 0">
+            <div>
+              <h2 class="sub-title" style="margin-bottom: 0.5rem;">My Unlocked & Enrolled Examinations</h2>
+              <p class="text-muted" style="margin-bottom: 1.5rem;">Examinations you have unlocked or are currently taking.</p>
+
+              <div class="grid">
+                <template x-for="exam in exams" :key="exam.id">
+                  <div class="card" :style="verifiedExam && verifiedExam.id === exam.id ? 'border: 2px solid var(--color-neutral);' : ''">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                      <span class="badge badge-primary">
+                        <svg class="icon" style="width: 12px; height: 12px;"><use href="#icon-clock" /></svg>
+                        <span x-text="exam.duration_minutes + ' Minutes'"></span>
+                      </span>
+                      <span style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="'Instructor: ' + exam.teacher_name"></span>
+                    </div>
+
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;" x-text="exam.title"></h3>
+                    <p class="text-muted" style="font-size: 0.9375rem; margin-bottom: 1rem; min-height: 40px;" x-text="exam.description || 'Standard essay assessment.'"></p>
+
+                    <!-- Exam Availability Schedule & Access Key Badges -->
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; font-size: 0.8125rem;">
+                      <!-- Schedule Window Status Badge -->
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <svg class="icon" style="width: 12px; height: 12px; stroke: var(--color-tertiary);"><use href="#icon-calendar" /></svg>
+                        <span 
+                          :class="{
+                            'badge badge-warning': getExamWindowStatus(exam).state === 'upcoming',
+                            'badge badge-error': getExamWindowStatus(exam).state === 'closed',
+                            'badge badge-neutral': getExamWindowStatus(exam).state === 'open' || getExamWindowStatus(exam).state === 'closing_soon'
+                          }"
+                          style="font-size: 0.7rem; padding: 2px 7px;"
+                          x-text="!exam.start_time ? 'Flexible Time (Start anytime)' : getExamWindowStatus(exam).message"
+                        ></span>
+                      </div>
+                    </div>
+
+                    <template x-if="exam.submission_status === 'submitted'">
+                      <div style="background: var(--color-neutral-subtle); border: 1px solid var(--color-neutral-border); border-radius: var(--rounded-sm); padding: 0.85rem; margin-bottom: 1rem; text-align: center;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--color-neutral);">Submission Recorded</div>
+                        <div class="text-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--color-neutral);" x-text="'Integrity Score: ' + exam.overall_integrity_score + '%'"></div>
+                      </div>
+                    </template>
+
+                    <template x-if="exam.submission_status === 'submitted'">
+                      <button @click="openSubmissionAudit(exam.submission_id)" class="btn btn-secondary btn-sm" style="width: 100%;">
+                        <span>Review Submission Log</span>
+                      </button>
+                    </template>
+
+                    <template x-if="exam.submission_status !== 'submitted'">
+                      <div>
+                        <!-- Upcoming (Not yet started) -->
+                        <template x-if="getExamWindowStatus(exam).state === 'upcoming'">
+                          <button class="btn btn-secondary" style="width: 100%; cursor: not-allowed; opacity: 0.65;" disabled>
+                            <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-clock" /></svg>
+                            <span>Not Available Yet</span>
+                          </button>
+                        </template>
+
+                        <!-- Closed (Past deadline) -->
+                        <template x-if="getExamWindowStatus(exam).state === 'closed'">
+                          <button class="btn btn-secondary" style="width: 100%; cursor: not-allowed; opacity: 0.65;" disabled>
+                            <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-lock" /></svg>
+                            <span>Examination Closed</span>
+                          </button>
+                        </template>
+
+                        <!-- Available to take / resume -->
+                        <template x-if="getExamWindowStatus(exam).state !== 'upcoming' && getExamWindowStatus(exam).state !== 'closed'">
+                          <button 
+                            @click="startExam(exam.id)" 
+                            class="btn btn-success" 
+                            style="width: 100%;"
+                          >
+                            <span x-text="exam.submission_status === 'in_progress' ? 'Resume Examination' : (!exam.start_time ? 'Start Exam (Flexible Time)' : 'Start Examination')"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>

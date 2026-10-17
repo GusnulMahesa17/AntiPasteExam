@@ -1,0 +1,9 @@
+  <!-- Toast Notification -->
+  <template x-if="toast.show">
+    <div class="toast-notification" :class="toast.type === 'error' ? 'toast-error' : 'toast-success'">
+      <svg class="icon" :style="toast.type === 'error' ? 'stroke: var(--color-secondary)' : 'stroke: var(--color-neutral)'">
+        <use :href="toast.type === 'error' ? '#icon-alert' : '#icon-check'" />
+      </svg>
+      <span x-text="toast.message"></span>
+    </div>
+  </template>

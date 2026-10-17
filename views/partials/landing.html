@@ -1,0 +1,152 @@
+    <!-- 1. LANDING & AUTHENTICATION VIEW -->
+    <template x-if="!user">
+      <div>
+        <!-- Split-Screen Hero Section -->
+        <section class="hero-split">
+          <div>
+            <div class="badge badge-primary" style="margin-bottom: 1.25rem;">
+              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-activity" /></svg>
+              <span>Academic Integrity Telemetry</span>
+            </div>
+            <h1 class="hero-title">
+              Authentic writing verified in real time.
+            </h1>
+            <p style="font-size: 1.125rem; margin: 1.25rem 0 2rem 0; color: var(--color-text-body);">
+              AntiPasteExam monitors input velocity, clipboard actions, and typing snapshot histories to ensure student essay authenticity without invasive surveillance.
+            </p>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button @click="fillDemoCredentials('teacher'); handleAuth();" class="btn btn-primary btn-lg">
+                <svg class="icon" style="stroke: #fff;"><use href="#icon-user" /></svg>
+                <span>Try Demo Teacher</span>
+              </button>
+              <button @click="fillDemoCredentials('student'); handleAuth();" class="btn btn-secondary btn-lg">
+                <svg class="icon"><use href="#icon-edit" /></svg>
+                <span>Try Demo Student</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Visual: Auth Portal Card -->
+          <div class="hero-preview-box" id="auth-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div style="display: flex; background: var(--color-surface-variant); padding: 3px; border-radius: var(--rounded-sm); width: 100%;">
+                <button 
+                  type="button"
+                  class="btn btn-sm" 
+                  style="flex: 1;" 
+                  :class="authMode === 'login' ? 'btn-primary' : 'btn-secondary'" 
+                  @click="authMode = 'login'">
+                  Sign In
+                </button>
+                <button 
+                  type="button"
+                  class="btn btn-sm" 
+                  style="flex: 1;" 
+                  :class="authMode === 'register' ? 'btn-primary' : 'btn-secondary'" 
+                  @click="authMode = 'register'">
+                  Register
+                </button>
+              </div>
+            </div>
+
+            <form @submit.prevent="handleAuth()">
+              <template x-if="authMode === 'register'">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" x-model="authForm.name" placeholder="Prof. Alex Johnson" required />
+                </div>
+              </template>
+
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" x-model="authForm.email" placeholder="name@university.edu" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" x-model="authForm.password" placeholder="••••••••" required />
+              </div>
+
+              <template x-if="authMode === 'register'">
+                <div class="form-group">
+                  <label class="form-label">Account Type</label>
+                  <select class="form-control" x-model="authForm.role">
+                    <option value="student">Student Account</option>
+                    <option value="teacher">Teacher / Instructor Account</option>
+                  </select>
+                </div>
+              </template>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                <span x-text="authMode === 'login' ? 'Sign In to Portal' : 'Create Account'"></span>
+              </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); text-align: center;">
+              <span style="font-size: 0.75rem; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">
+                Quick Instant Demo Access
+              </span>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" @click="fillDemoCredentials('teacher'); handleAuth();" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  Teacher Login
+                </button>
+                <button type="button" @click="fillDemoCredentials('student'); handleAuth();" class="btn btn-secondary btn-sm" style="flex: 1;">
+                  Student Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Zig-Zag Features Section -->
+        <section style="margin-top: 3rem;">
+          <div class="zig-zag-row">
+            <div>
+              <div class="badge badge-neutral" style="margin-bottom: 0.75rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-lock" /></svg>
+                <span>Input Interception</span>
+              </div>
+              <h2 class="sub-title">Clipboard & Text Injection Prevention</h2>
+              <p>
+                Standard online exam portals only evaluate the final submitted string. AntiPasteExam captures clipboard shortcuts, context-menu actions, and burst character injections at the DOM level, providing clear signals while encouraging manual articulation.
+              </p>
+            </div>
+            <div class="feature-visual-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge badge-error">
+                  <svg class="icon" style="width: 12px; height: 12px;"><use href="#icon-alert" /></svg>
+                  <span>Paste Intercepted</span>
+                </span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);">Delta: +240 chars (0ms)</span>
+              </div>
+              <div style="background: var(--color-surface-variant); border: 1px dashed var(--color-border); border-radius: var(--rounded-sm); padding: 1rem; font-family: var(--font-family-mono); font-size: 0.875rem; color: var(--color-text-body);">
+                <span style="color: var(--color-secondary); font-weight: 600;">[SECURITY EVENT]:</span> Direct clipboard paste blocked. Telemetry counter incremented.
+              </div>
+            </div>
+          </div>
+
+          <div class="zig-zag-row reverse">
+            <div>
+              <div class="badge badge-primary" style="margin-bottom: 0.75rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-history" /></svg>
+                <span>Forensic Replay</span>
+              </div>
+              <h2 class="sub-title">Incremental Snapshot Timeline</h2>
+              <p>
+                Teachers can scrub through time-stamped delta frames to inspect how an answer was written from the first paragraph to the final conclusion, ensuring complete transparency in academic evaluation.
+              </p>
+            </div>
+            <div class="feature-visual-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-weight: 600; font-size: 0.875rem;">Replay Timeline Scrubber</span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-primary);">Frame 14 of 28</span>
+              </div>
+              <div class="playback-console" style="min-height: 100px;">
+                The Industrial Revolution fundamentally altered the relationship between labor and production capital...
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </template>

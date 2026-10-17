@@ -1,0 +1,57 @@
+    <!-- 8. ACCESS KEY PROMPT MODAL (STUDENT ACCESS RESTRICTION) -->
+    <template x-if="keyModal.isOpen">
+      <div class="modal-backdrop" @click.self="closeAccessKeyModal()">
+        <div class="modal-dialog" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary-subtle); display: flex; align-items: center; justify-content: center;">
+                <svg class="icon" style="stroke: var(--color-primary); width: 18px; height: 18px;"><use href="#icon-key" /></svg>
+              </div>
+              <div>
+                <h3 style="font-size: 1.05rem; margin: 0;">Enter Examination Passcode</h3>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted);" x-text="keyModal.examTitle || 'Unlock & Access Assessment'"></div>
+              </div>
+            </div>
+            <button type="button" @click="closeAccessKeyModal()" class="btn btn-secondary btn-sm" style="padding: 4px 8px; border: none; font-size: 1.1rem; line-height: 1;">&times;</button>
+          </div>
+
+          <form @submit.prevent="submitAccessKeyModal()">
+            <div class="modal-body">
+              <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+                Examinations are protected. Please enter the passcode provided by your instructor to reveal and access your examination:
+              </p>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8125rem;">Examination Passcode</label>
+                <input 
+                  type="text" 
+                  class="form-control text-mono" 
+                  x-model="keyModal.inputKey"
+                  placeholder="e.g. ETHICS-2026"
+                  required
+                  autofocus
+                  style="font-size: 1.15rem; letter-spacing: 0.08em; text-align: center; font-weight: 600; text-transform: uppercase;"
+                />
+              </div>
+
+              <template x-if="keyModal.error">
+                <div style="margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--color-secondary-subtle); border: 1px solid var(--color-secondary-border); border-radius: var(--rounded-sm); color: var(--color-secondary); font-size: 0.8125rem; display: flex; align-items: center; gap: 6px;">
+                  <svg class="icon" style="width: 14px; height: 14px; stroke: var(--color-secondary);"><use href="#icon-alert" /></svg>
+                  <span x-text="keyModal.error"></span>
+                </div>
+              </template>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" @click="closeAccessKeyModal()" class="btn btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;"><use href="#icon-check" /></svg>
+                <span>Access Exam</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </template>

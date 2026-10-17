@@ -1,0 +1,62 @@
+    <!-- 6. STUDENT EXAM ROOM (ACTIVE TELEMETRY & ANTI-PASTE) -->
+    <template x-if="user && currentView === 'exam_room' && activeExam">
+      <div>
+        <div class="card" style="padding: 1rem 1.5rem; margin-bottom: 2rem; position: sticky; top: 72px; z-index: var(--z-sticky);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
+            <div>
+              <span class="badge badge-primary" style="margin-bottom: 4px;">Active Session</span>
+              <h2 style="font-size: 1.35rem;" x-text="activeExam.title"></h2>
+            </div>
+
+            <div class="telemetry-bar" style="margin: 0; padding: 0.6rem 1rem;">
+              <div class="telemetry-pill">
+                <svg class="icon" style="stroke: var(--color-tertiary);"><use href="#icon-clock" /></svg>
+                <span>Time Remaining:</span>
+                <strong class="text-mono" style="color: var(--color-text-main); font-size: 1.125rem;" x-text="formatTime(examTimerSeconds)"></strong>
+              </div>
+              <div class="telemetry-pill">
+                <span class="pulse-indicator" style="color: var(--color-neutral);"></span>
+                <span class="text-muted" x-text="saveStatusText"></span>
+              </div>
+              <button @click="saveExamProgress(false)" class="btn btn-secondary btn-sm">Save Draft</button>
+              <button @click="submitFinalExam()" class="btn btn-success btn-sm">Finalize & Submit</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+          <template x-for="(q, idx) in activeExam.questions" :key="q.id">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="badge badge-primary" x-text="'Question #' + (idx + 1)"></span>
+                <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="'Max Score: ' + q.max_score + ' pts'"></span>
+              </div>
+
+              <h3 style="font-size: 1.125rem; margin-bottom: 1.25rem; color: var(--color-text-main);" x-text="q.question_text"></h3>
+
+              <div class="form-group">
+                <label class="form-label" style="display: flex; justify-content: space-between;">
+                  <span>Essay Response (Manual input required)</span>
+                  <span style="color: var(--color-secondary); font-size: 0.75rem; font-weight: 600;">Direct Paste Disabled</span>
+                </label>
+                <textarea 
+                  class="form-control" 
+                  rows="8"
+                  placeholder="Articulate your essay answer here manually..."
+                  x-model="studentAnswers[q.id].content"
+                  @paste="handlePasteAttempt($event, q.id)"
+                  @keydown="handleKeyDown($event, q.id)"
+                  @input="handleInput($event, q.id)"
+                ></textarea>
+              </div>
+
+              <div style="display: flex; gap: 1.5rem; font-size: 0.8125rem; color: var(--color-text-muted); flex-wrap: wrap; border-top: 1px solid var(--color-border-subtle); padding-top: 0.75rem;">
+                <div>Keystrokes: <strong class="text-mono" style="color: var(--color-text-main);" x-text="studentAnswers[q.id].total_keystrokes"></strong></div>
+                <div>Characters: <strong class="text-mono" style="color: var(--color-text-main);" x-text="studentAnswers[q.id].content?.length || 0"></strong></div>
+                <div>Paste Attempts: <strong class="text-mono" :style="studentAnswers[q.id].paste_count > 0 ? 'color: var(--color-secondary);' : 'color: var(--color-text-main);'" x-text="studentAnswers[q.id].paste_count"></strong></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>

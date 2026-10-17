@@ -1,0 +1,62 @@
+    <!-- 4. TEACHER VIEW: EXAM SUBMISSIONS TABLE -->
+    <template x-if="user && user.role === 'teacher' && currentView === 'teacher_submissions'">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <button @click="currentView = 'dashboard'" class="btn btn-secondary btn-sm" style="margin-bottom: 0.75rem;">
+              ← Back to Exams List
+            </button>
+            <h1 class="section-title" x-text="activeExam?.title"></h1>
+            <p class="text-muted">Student submission roster with academic integrity verification indicators.</p>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Paste Attempts</th>
+                <th>Integrity Score</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="sub in currentSubmissionsList" :key="sub.id">
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--color-text-main);" x-text="sub.student_name"></div>
+                    <div class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="sub.student_email"></div>
+                  </td>
+                  <td>
+                    <span class="badge" :class="sub.status === 'submitted' ? 'badge-neutral' : 'badge-warning'" x-text="sub.status"></span>
+                  </td>
+                  <td>
+                    <span class="text-mono" :style="sub.total_paste_count > 0 ? 'color: var(--color-secondary); font-weight: 700;' : 'color: var(--color-text-muted);'" x-text="sub.total_paste_count + ' attempts'"></span>
+                  </td>
+                  <td>
+                    <span class="text-mono" style="font-weight: 700; font-size: 1.125rem;" 
+                          :style="sub.overall_integrity_score >= 80 ? 'color: var(--color-neutral);' : (sub.overall_integrity_score >= 50 ? 'color: var(--color-tertiary);' : 'color: var(--color-secondary);')"
+                          x-text="sub.overall_integrity_score + '%'">
+                    </span>
+                  </td>
+                  <td>
+                    <button @click="openSubmissionAudit(sub.id)" class="btn btn-primary btn-sm">
+                      <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;"><use href="#icon-eye" /></svg>
+                      <span>Forensic Audit</span>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <template x-if="currentSubmissionsList.length === 0">
+            <div style="padding: 3rem; text-align: center; color: var(--color-text-muted);">
+              No submissions recorded for this examination yet.
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>

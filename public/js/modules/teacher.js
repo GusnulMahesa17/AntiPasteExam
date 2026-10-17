@@ -182,10 +182,16 @@ export function createTeacherModule(api, toast) {
             'success'
           );
         } else {
-          await api('/api/exams', {
+          const created = await api('/api/exams', {
             method: 'POST',
             body: JSON.stringify(payload),
           });
+          // Track the newly created exam so later Save/Publish actions update
+          // this record instead of inserting duplicate exams.
+          if (created && created.examId) {
+            this.examForm.id = created.examId;
+            this.isEditingExam = true;
+          }
           toast(
             willPublish
               ? 'Examination published! Students can now take the exam.'

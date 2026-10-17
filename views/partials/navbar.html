@@ -1,0 +1,37 @@
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="brand" @click="currentView = 'dashboard'">
+        <div class="brand-badge-ai">
+          <svg class="icon" style="stroke: #fff;"><use href="#icon-shield" /></svg>
+        </div>
+        <div>
+          <div class="brand-name">AntiPaste<span style="color: var(--color-primary);">Exam</span></div>
+          <span class="brand-tagline">Write, Don't Paste</span>
+        </div>
+      </div>
+
+      <div>
+        <template x-if="user">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="badge" :class="user.role === 'teacher' ? 'badge-primary' : 'badge-neutral'">
+              <span class="pulse-indicator"></span>
+              <span x-text="user.role"></span>
+            </span>
+            <span style="font-weight: 500; font-size: 0.9375rem; color: var(--color-text-main);" x-text="user.name"></span>
+            <button @click="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+          </div>
+        </template>
+        <template x-if="!user">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button @click="authMode = 'login'; document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth' })" class="btn btn-secondary btn-sm">
+              Sign In
+            </button>
+            <button @click="authMode = 'register'; document.getElementById('auth-card')?.scrollIntoView({ behavior: 'smooth' })" class="btn btn-primary btn-sm">
+              Get Started
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
