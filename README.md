@@ -31,6 +31,18 @@ AntiPasteExam is a modern web-based examination platform designed to encourage a
 - **Database**: MySQL (`mysql2` pool with auto-initialization schema)
 - **Frontend**: HTML5, Vanilla CSS (Glassmorphism design), JavaScript, Alpine.js
 
+## Application Pages
+
+The interface is server-rendered as separate pages. Dashboard, exam editor, exam room, submissions, and audit views have direct URLs and can be refreshed or bookmarked:
+
+- `/teacher/dashboard`
+- `/teacher/exams/new`
+- `/teacher/exams/:examId/edit`
+- `/teacher/exams/:examId/submissions`
+- `/student/dashboard`
+- `/student/exams/:examId`
+- `/submissions/:submissionId`
+
 ---
 
 ## Getting Started

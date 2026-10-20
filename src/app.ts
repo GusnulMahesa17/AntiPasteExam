@@ -36,17 +36,17 @@ app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve the assembled application shell at the root
-app.get('/', (_req: Request, res: Response) => {
-  res.type('html').send(template.render('index.html'));
-});
+const sendPage = (view: string) => (_req: Request, res: Response): void => {
+  res.type('html').send(template.renderPage(view));
+};
 
-// Fallback for SPA routing
-app.use((req: Request, res: Response, next) => {
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
-  res.type('html').send(template.render('index.html'));
-});
+app.get('/', sendPage('partials/landing.html'));
+app.get('/teacher/dashboard', sendPage('partials/teacher-dashboard.html'));
+app.get('/teacher/exams/new', sendPage('partials/teacher-exam-editor.html'));
+app.get('/teacher/exams/:examId/edit', sendPage('partials/teacher-exam-editor.html'));
+app.get('/teacher/exams/:examId/submissions', sendPage('partials/teacher-submissions.html'));
+app.get('/student/dashboard', sendPage('partials/student-dashboard.html'));
+app.get('/student/exams/:examId', sendPage('partials/student-exam-room.html'));
+app.get('/submissions/:submissionId', sendPage('partials/teacher-audit.html'));
 
 export default app;

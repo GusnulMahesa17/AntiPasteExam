@@ -1,7 +1,28 @@
     <!-- 2. TEACHER DASHBOARD VIEW (Exams List) -->
     <template x-if="user && user.role === 'teacher' && currentView === 'dashboard'">
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div class="dashboard-layout dashboard-layout--teacher" x-data="{ dashboardSection: 'overview' }">
+        <aside class="dashboard-sidebar">
+          <p class="dashboard-sidebar-label">TEACHER</p>
+          <h2 class="dashboard-sidebar-title">Workspace</h2>
+          <nav class="dashboard-nav" aria-label="Teacher dashboard">
+            <a class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" href="#teacher-overview" @click="dashboardSection = 'overview'">
+              <svg class="icon"><use href="#icon-activity" /></svg>
+              <span>Overview</span>
+            </a>
+            <a class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" href="#teacher-exams" @click="dashboardSection = 'exams'">
+              <svg class="icon"><use href="#icon-file-text" /></svg>
+              <span>Examinations</span>
+            </a>
+            <button type="button" class="dashboard-nav-link" @click="openCreateExamPage()">
+              <svg class="icon"><use href="#icon-plus" /></svg>
+              <span>Create exam</span>
+            </button>
+          </nav>
+          <p class="dashboard-sidebar-note">Create assessments and review student submissions.</p>
+        </aside>
+
+        <div class="dashboard-main">
+        <div id="teacher-overview" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
           <div>
             <div class="badge badge-primary" style="margin-bottom: 0.5rem;">
               <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
@@ -16,7 +37,7 @@
           </button>
         </div>
 
-        <div class="grid">
+        <div id="teacher-exams" class="grid">
           <template x-for="exam in exams" :key="exam.id">
             <div class="card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -85,5 +106,6 @@
             </button>
           </div>
         </template>
+        </div>
       </div>
     </template>

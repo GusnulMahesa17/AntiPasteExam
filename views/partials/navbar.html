@@ -1,7 +1,7 @@
   <!-- Top Navigation Bar -->
   <header class="navbar">
     <div class="navbar-inner">
-      <div class="brand" @click="currentView = 'dashboard'">
+      <a class="brand" :href="user ? (user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard') : '/'">
         <div class="brand-badge-ai">
           <svg class="icon" style="stroke: #fff;"><use href="#icon-shield" /></svg>
         </div>
@@ -9,7 +9,7 @@
           <div class="brand-name">AntiPaste<span style="color: var(--color-primary);">Exam</span></div>
           <span class="brand-tagline">Write, Don't Paste</span>
         </div>
-      </div>
+      </a>
 
       <div>
         <template x-if="user">

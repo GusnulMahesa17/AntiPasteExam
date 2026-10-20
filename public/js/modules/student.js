@@ -5,14 +5,19 @@ export function createStudentModule(api, toast) {
   return {
     studentAnswers: {},
     activeSubmission: null,
-    examAccessKeys: {},   // keyed by exam.id — stores the student's typed access key per exam
+    examAccessKeys: JSON.parse(localStorage.getItem('examAccessKeys') || '{}'),
+    rememberAccessKey(examId, key) {
+      if (!key) return;
+      this.examAccessKeys[examId] = key;
+      localStorage.setItem('examAccessKeys', JSON.stringify(this.examAccessKeys));
+    },
     async verifyAccessKey(key) {
       const response = await api('/api/exams/verify-key', {
         method: 'POST',
         body: JSON.stringify({ key: (key || '').trim() }),
       });
       if (response && response.exam) {
-        this.examAccessKeys[response.exam.id] = key.trim();
+        this.rememberAccessKey(response.exam.id, key.trim());
         return response.exam;
       }
       throw new Error('Examination not found or key invalid.');

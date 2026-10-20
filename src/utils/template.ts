@@ -45,6 +45,21 @@ export function createTemplateEngine(viewsDir: string) {
       const entry = path.resolve(root, viewName);
       return resolveIncludes(readFile(entry), path.dirname(entry), [entry]);
     },
+    renderPage(contentView: string): string {
+      const layoutPath = path.resolve(root, 'index.html');
+      const contentPath = path.resolve(root, contentView);
+      if (!contentPath.startsWith(root + path.sep)) {
+        throw new Error(`Page path escapes the views directory: ${contentView}`);
+      }
+
+      const layout = resolveIncludes(readFile(layoutPath), path.dirname(layoutPath), [layoutPath]);
+      const content = resolveIncludes(readFile(contentPath), path.dirname(contentPath), [contentPath]);
+      const contentSlot = '<!-- @content -->';
+      if (!layout.includes(contentSlot)) {
+        throw new Error('The application layout is missing its content slot');
+      }
+      return layout.replace(contentSlot, content);
+    },
     clearCache(): void {
       cache.clear();
     },

@@ -11,9 +11,9 @@ export function createTelemetryEngine(context, toast) {
     saveStatusText: 'All changes saved',
     lastContentLength: {},
 
-    startSession(durationMinutes, onAutoSave) {
+    startSession(durationMinutes, onAutoSave, elapsedSeconds = 0) {
       this.stopSession();
-      this.examTimerSeconds = durationMinutes * 60;
+      this.examTimerSeconds = Math.max(0, durationMinutes * 60 - elapsedSeconds);
       this.pendingEvents = [];
 
       // Session countdown timer

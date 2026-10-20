@@ -1,7 +1,28 @@
     <!-- 5. STUDENT DASHBOARD VIEW (KEY-BASED JOIN & FLEXIBLE TIME WORKFLOW) -->
     <template x-if="user && user.role === 'student' && currentView === 'dashboard'">
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div class="dashboard-layout dashboard-layout--student" x-data="{ dashboardSection: 'overview' }">
+        <aside class="dashboard-sidebar">
+          <p class="dashboard-sidebar-label">STUDENT</p>
+          <h2 class="dashboard-sidebar-title">My workspace</h2>
+          <nav class="dashboard-nav" aria-label="Student dashboard">
+            <a class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" href="#student-overview" @click="dashboardSection = 'overview'">
+              <svg class="icon"><use href="#icon-activity" /></svg>
+              <span>Overview</span>
+            </a>
+            <a class="dashboard-nav-link" :class="dashboardSection === 'join' ? 'is-current' : ''" href="#student-join" @click="dashboardSection = 'join'">
+              <svg class="icon"><use href="#icon-key" /></svg>
+              <span>Access an exam</span>
+            </a>
+            <a class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" href="#student-exams" @click="dashboardSection = 'exams'">
+              <svg class="icon"><use href="#icon-file-text" /></svg>
+              <span>My examinations</span>
+            </a>
+          </nav>
+          <p class="dashboard-sidebar-note">Enter a teacher-provided key to unlock an exam.</p>
+        </aside>
+
+        <div class="dashboard-main">
+        <div id="student-overview" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
           <div>
             <div class="badge badge-neutral" style="margin-bottom: 0.5rem;">
               <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
@@ -19,7 +40,7 @@
         </div>
 
         <!-- 1. ENTER KEY SECTION -->
-        <div class="student-join-section">
+        <div id="student-join" class="student-join-section">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
             <div>
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -222,7 +243,7 @@
         </template>
 
         <!-- 3. ALL AVAILABLE & ENROLLED EXAMINATIONS ROSTER -->
-        <div style="margin-top: 2rem;">
+        <div id="student-exams" style="margin-top: 2rem;">
           <template x-if="exams.length > 0">
             <div>
               <h2 class="sub-title" style="margin-bottom: 0.5rem;">My Unlocked & Enrolled Examinations</h2>
@@ -307,6 +328,7 @@
               </div>
             </div>
           </template>
+        </div>
         </div>
       </div>
     </template>

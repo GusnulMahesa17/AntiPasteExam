@@ -1,8 +1,4 @@
-/**
- * AntiPasteExam — Teacher Module (Dedicated Exam & Question Management Page)
- */
 export function createTeacherModule(api, toast) {
-  /** Convert a DB datetime string → HTML datetime-local value (YYYY-MM-DDTHH:MM) */
   function toDatetimeLocal(dbStr) {
     if (!dbStr) return '';
     const d = new Date(dbStr);

@@ -24,7 +24,7 @@ function defineApp() {
     const studentModule = createStudentModule(api, toast);
 
     const appState = {
-      // Views: 'dashboard' | 'exam_editor' | 'exam_room' | 'teacher_submissions' | 'submission_audit'
+      // View name is derived from the server-rendered page URL.
       currentView: 'dashboard',
       toast: { show: false, message: '', type: 'info' },
       exams: [],
@@ -52,7 +52,7 @@ function defineApp() {
         error: '',
       },
 
-      init() {
+      async init() {
         // Initialize telemetry engine with context
         this.telemetry = createTelemetryEngine(this, toast);
 
@@ -61,9 +61,83 @@ function defineApp() {
           this.showToast(e.detail.message, e.detail.type);
         });
 
-        if (this.auth.token && this.auth.user) {
-          this.fetchExams();
+        await this.initializePage();
+      },
+
+      async initializePage() {
+        const pathname = window.location.pathname;
+        const teacherEdit = pathname.match(/^\/teacher\/exams\/(\d+)\/edit$/);
+        const teacherSubmissions = pathname.match(/^\/teacher\/exams\/(\d+)\/submissions$/);
+        const studentExam = pathname.match(/^\/student\/exams\/(\d+)$/);
+        const submissionAudit = pathname.match(/^\/submissions\/(\d+)$/);
+
+        if (pathname === '/') this.currentView = 'landing';
+        else if (pathname === '/teacher/dashboard') this.currentView = 'dashboard';
+        else if (pathname === '/teacher/exams/new' || teacherEdit) this.currentView = 'exam_editor';
+        else if (teacherSubmissions) this.currentView = 'teacher_submissions';
+        else if (pathname === '/student/dashboard') this.currentView = 'dashboard';
+        else if (studentExam) this.currentView = 'exam_room';
+        else if (submissionAudit) this.currentView = 'submission_audit';
+        else {
+          window.location.replace('/');
+          return;
         }
+
+        if (!this.auth.token || !this.auth.user) {
+          if (pathname !== '/') window.location.replace('/');
+          return;
+        }
+
+        if (pathname === '/') {
+          this.navigateToDashboard();
+          return;
+        }
+
+        const requiredRole = pathname.startsWith('/teacher/') ? 'teacher'
+          : pathname.startsWith('/student/') ? 'student'
+            : null;
+        if (requiredRole && this.user.role !== requiredRole) {
+          this.navigateToDashboard();
+          return;
+        }
+
+        if (this.currentView === 'dashboard') {
+          await this.fetchExams();
+        } else if (this.currentView === 'exam_editor') {
+          if (teacherEdit) {
+            const view = await this.teacher.openEditExamPage(Number(teacherEdit[1]));
+            if (!view) this.navigateToDashboard();
+          } else {
+            this.teacher.openCreateExamPage();
+          }
+        } else if (this.currentView === 'teacher_submissions') {
+          this.activeExam = await this.teacher.loadExamSubmissions(Number(teacherSubmissions[1]));
+        } else if (this.currentView === 'submission_audit') {
+          await this.teacher.loadSubmissionAudit(Number(submissionAudit[1]));
+        } else if (this.currentView === 'exam_room') {
+          try {
+            this.activeExam = await this.student.startExamSession(
+              Number(studentExam[1]),
+              this.telemetry,
+              this.examAccessKeys[studentExam[1]] || ''
+            );
+            const startedAt = new Date(this.activeSubmission.started_at).getTime();
+            const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+            this.telemetry.startSession(
+              this.activeExam.duration_minutes,
+              (isBackground) => this.student.saveDraft(this.telemetry, isBackground),
+              elapsedSeconds
+            );
+          } catch (error) {
+            this.showToast(error.message || 'Unable to resume this examination.', 'error');
+            this.navigateToDashboard();
+          }
+        }
+      },
+
+      navigateToDashboard() {
+        const route = this.user?.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard';
+        window.location.assign(route);
       },
 
       showToast(message, type = 'info') {
@@ -98,8 +172,7 @@ function defineApp() {
       async handleAuth() {
         const user = await this.auth.handleAuth();
         if (user) {
-          this.currentView = 'dashboard';
-          this.fetchExams();
+          window.location.assign(user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
         }
       },
 
@@ -113,15 +186,13 @@ function defineApp() {
         // Try login first; if it fails, register then login
         const user = await this.auth.handleAuth();
         if (user) {
-          this.currentView = 'dashboard';
-          this.fetchExams();
+          window.location.assign(user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
         } else {
           // Auto-register demo account
           this.auth.authMode = 'register';
           const regUser = await this.auth.handleAuth();
           if (regUser) {
-            this.currentView = 'dashboard';
-            this.fetchExams();
+            window.location.assign(regUser.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
           }
         }
       },
@@ -129,9 +200,7 @@ function defineApp() {
       logout() {
         this.auth.logout();
         if (this.telemetry) this.telemetry.stopSession();
-        this.currentView = 'dashboard';
-        this.exams = [];
-        this.activeExam = null;
+        window.location.assign('/');
       },
 
       // --------------- Exams Listing ---------------
@@ -149,12 +218,12 @@ function defineApp() {
 
       // --------------- Teacher Actions ---------------
       openCreateExamPage() {
-        this.currentView = this.teacher.openCreateExamPage();
+        this.teacher.openCreateExamPage();
+        window.location.assign('/teacher/exams/new');
       },
 
       async openEditExamPage(examId) {
-        const view = await this.teacher.openEditExamPage(examId);
-        if (view) this.currentView = view;
+        window.location.assign(`/teacher/exams/${examId}/edit`);
       },
 
       addQuestionField() { this.teacher.addQuestionField(); },
@@ -167,8 +236,7 @@ function defineApp() {
         const success = await this.teacher.saveExam(this.fetchExams.bind(this), publish);
         if (success) {
           if (publish) {
-            // Only navigate back after publishing (exam is now locked)
-            this.currentView = 'dashboard';
+            window.location.assign('/teacher/dashboard');
           }
           // For draft saves, stay on the editor page so teacher can keep editing
         }
@@ -183,13 +251,11 @@ function defineApp() {
       },
 
       async viewSubmissions(examId) {
-        this.activeExam = await this.teacher.loadExamSubmissions(examId);
-        this.currentView = 'teacher_submissions';
+        window.location.assign(`/teacher/exams/${examId}/submissions`);
       },
 
       async openSubmissionAudit(submissionId) {
-        await this.teacher.loadSubmissionAudit(submissionId);
-        this.currentView = 'submission_audit';
+        window.location.assign(`/submissions/${submissionId}`);
       },
 
       // --------------- Student Actions ---------------
@@ -265,13 +331,8 @@ function defineApp() {
 
         try {
           const keyToUse = key || this.examAccessKeys[examId] || '';
-          this.activeExam = await this.student.startExamSession(examId, this.telemetry, keyToUse);
-          this.currentView = 'exam_room';
-          this.telemetry.startSession(
-            this.activeExam.duration_minutes,
-            (isBg) => this.student.saveDraft(this.telemetry, isBg)
-          );
-          this.showToast('Examination session active. Anti-paste telemetry is running.', 'info');
+          this.student.rememberAccessKey(examId, keyToUse);
+          window.location.assign(`/student/exams/${examId}`);
         } catch (err) {
           console.error('Failed to start exam:', err);
           // If error was incorrect access key, reopen modal with error
@@ -346,7 +407,7 @@ function defineApp() {
       async submitFinalExam() {
         const submissionId = await this.student.finalizeSubmission(this.telemetry);
         if (submissionId) {
-          await this.openSubmissionAudit(submissionId);
+          window.location.assign(`/submissions/${submissionId}`);
         }
       },
 
