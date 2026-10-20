@@ -2,8 +2,6 @@
  * AntiPasteExam — Teacher Module (Dedicated Exam & Question Management Page)
  */
 export function createTeacherModule(api, toast) {
-  let playbackTimer = null;
-
   /** Convert a DB datetime string → HTML datetime-local value (YYYY-MM-DDTHH:MM) */
   function toDatetimeLocal(dbStr) {
     if (!dbStr) return '';
@@ -29,8 +27,6 @@ export function createTeacherModule(api, toast) {
     },
     currentSubmissionsList: [],
     selectedSubmission: null,
-    auditSnapshotIndex: 0,
-    isReplaying: false,
 
     openCreateExamPage() {
       this.isEditingExam = false;
@@ -246,32 +242,7 @@ export function createTeacherModule(api, toast) {
     async loadSubmissionAudit(submissionId) {
       const data = await api(`/api/submissions/${submissionId}`);
       this.selectedSubmission = data;
-      this.auditSnapshotIndex = (data.snapshots && data.snapshots.length > 0) ? data.snapshots.length - 1 : 0;
-      this.isReplaying = false;
-      if (playbackTimer) clearInterval(playbackTimer);
       return data;
-    },
-
-    togglePlayback() {
-      if (!this.selectedSubmission?.snapshots?.length) return;
-
-      if (this.isReplaying) {
-        this.isReplaying = false;
-        if (playbackTimer) clearInterval(playbackTimer);
-        return;
-      }
-
-      this.isReplaying = true;
-      this.auditSnapshotIndex = 0;
-
-      playbackTimer = setInterval(() => {
-        if (this.auditSnapshotIndex < this.selectedSubmission.snapshots.length - 1) {
-          this.auditSnapshotIndex++;
-        } else {
-          this.isReplaying = false;
-          clearInterval(playbackTimer);
-        }
-      }, 600);
     },
   };
 }

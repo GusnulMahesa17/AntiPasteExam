@@ -75,12 +75,3 @@ export interface IntegrityEvent {
   detected_at: Date;
 }
 
-export interface AnswerSnapshot {
-  id: number;
-  answer_id: number;
-  snapshot_text: string;
-  char_count: number;
-  keystrokes_delta: number;
-  time_offset_seconds: number;
-  created_at: Date;
-}

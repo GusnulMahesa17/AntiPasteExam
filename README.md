@@ -18,10 +18,9 @@ AntiPasteExam is a modern web-based examination platform designed to encourage a
   - Intercepts & blocks clipboard paste events.
   - Detects sudden large text injections (anomalous burst inserts).
   - Tracks browser tab switching & blur events.
-  - Captures incremental answer snapshots over time.
 - **Forensic Audit Inspector**:
   - Computes an **Academic Integrity Score** ($0 - 100\%$).
-  - **Visual Typing Playback**: Teachers can scrub through snapshots to replay how the essay was constructed step-by-step.
+  - Displays submitted answers and typing analytics.
   - Security events log with exact timestamps.
 
 ---

@@ -90,7 +90,7 @@ export class SubmissionService {
     return { submission, answers };
   }
 
-  public static async saveProgress(studentId: number, submissionId: number, answers: any[], events: any[], snapshots: any[]) {
+  public static async saveProgress(studentId: number, submissionId: number, answers: any[], events: any[]) {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -179,33 +179,6 @@ export class SubmissionService {
                 question_id || null,
                 event_type,
                 event_data ? JSON.stringify(event_data) : null,
-              ]
-            );
-          }
-        }
-      }
-
-      // 3. Save Snapshots
-      if (Array.isArray(snapshots) && snapshots.length > 0) {
-        for (const snap of snapshots) {
-          const { question_id, snapshot_text, char_count, keystrokes_delta, time_offset_seconds } = snap;
-
-          const [ansRows] = await connection.query<RowDataPacket[]>(
-            'SELECT id FROM answers WHERE submission_id = ? AND question_id = ?',
-            [submissionId, question_id]
-          );
-
-          if (ansRows.length > 0) {
-            const answerId = ansRows[0].id;
-            await connection.query(
-              `INSERT INTO answer_snapshots (answer_id, snapshot_text, char_count, keystrokes_delta, time_offset_seconds)
-               VALUES (?, ?, ?, ?, ?)`,
-              [
-                answerId,
-                snapshot_text || '',
-                char_count || 0,
-                keystrokes_delta || 0,
-                time_offset_seconds || 0,
               ]
             );
           }
@@ -326,16 +299,7 @@ export class SubmissionService {
       [submissionId]
     );
 
-    const [snapshots] = await pool.query<RowDataPacket[]>(
-      `SELECT sn.*, a.question_id
-       FROM answer_snapshots sn
-       JOIN answers a ON sn.answer_id = a.id
-       WHERE a.submission_id = ?
-       ORDER BY sn.time_offset_seconds ASC, sn.created_at ASC`,
-      [submissionId]
-    );
-
-    return { submission, answers, events, snapshots };
+    return { submission, answers, events };
   }
 
   public static async getExamSubmissions(examId: number, teacherId: number) {

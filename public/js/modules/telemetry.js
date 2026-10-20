@@ -7,7 +7,6 @@ export function createTelemetryEngine(context, toast) {
 
   return {
     pendingEvents: [],
-    pendingSnapshots: [],
     examTimerSeconds: 0,
     saveStatusText: 'All changes saved',
     lastContentLength: {},
@@ -16,7 +15,6 @@ export function createTelemetryEngine(context, toast) {
       this.stopSession();
       this.examTimerSeconds = durationMinutes * 60;
       this.pendingEvents = [];
-      this.pendingSnapshots = [];
 
       // Session countdown timer
       timerInterval = setInterval(() => {
@@ -34,9 +32,8 @@ export function createTelemetryEngine(context, toast) {
         }
       }, 1000);
 
-      // Periodic snapshot capture & auto-save (every 10s)
+      // Periodic auto-save (every 10s)
       autoSaveInterval = setInterval(() => {
-        this.captureSnapshots(durationMinutes);
         if (onAutoSave) onAutoSave(true);
       }, 10000);
 
@@ -121,23 +118,6 @@ export function createTelemetryEngine(context, toast) {
       }
 
       this.lastContentLength[questionId] = currentLen;
-    },
-
-    captureSnapshots(totalDurationMinutes) {
-      if (context.currentView !== 'exam_room' || !context.studentAnswers) return;
-
-      Object.keys(context.studentAnswers).forEach((qId) => {
-        const ans = context.studentAnswers[qId];
-        if (ans.content && ans.content.trim().length > 0) {
-          this.pendingSnapshots.push({
-            question_id: parseInt(qId, 10),
-            snapshot_text: ans.content,
-            char_count: ans.content.length,
-            keystrokes_delta: ans.total_keystrokes,
-            time_offset_seconds: (totalDurationMinutes * 60) - this.examTimerSeconds,
-          });
-        }
-      });
     },
 
     formatTime(seconds) {

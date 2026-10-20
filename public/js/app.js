@@ -88,9 +88,6 @@ function defineApp() {
       get totalScore() { return this.teacher?.totalScore || 0; },
       get currentSubmissionsList() { return this.teacher?.currentSubmissionsList || []; },
       get selectedSubmission() { return this.teacher?.selectedSubmission || null; },
-      get auditSnapshotIndex() { return this.teacher?.auditSnapshotIndex || 0; },
-      set auditSnapshotIndex(v) { if (this.teacher) this.teacher.auditSnapshotIndex = v; },
-      get isReplaying() { return this.teacher?.isReplaying || false; },
       get studentAnswers() { return this.student?.studentAnswers || {}; },
       get activeSubmission() { return this.student?.activeSubmission || null; },
       get examAccessKeys() { return this.student?.examAccessKeys || {}; },
@@ -194,8 +191,6 @@ function defineApp() {
         await this.teacher.loadSubmissionAudit(submissionId);
         this.currentView = 'submission_audit';
       },
-
-      togglePlayback() { this.teacher.togglePlayback(); },
 
       // --------------- Student Actions ---------------
       async verifyAndUnlockExam(keyToVerify) {
@@ -349,10 +344,7 @@ function defineApp() {
       },
 
       async submitFinalExam() {
-        const submissionId = await this.student.finalizeSubmission(
-          this.telemetry,
-          this.activeExam.duration_minutes
-        );
+        const submissionId = await this.student.finalizeSubmission(this.telemetry);
         if (submissionId) {
           await this.openSubmissionAudit(submissionId);
         }

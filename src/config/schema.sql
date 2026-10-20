@@ -83,14 +83,3 @@ CREATE TABLE IF NOT EXISTS integrity_events (
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. Answer Snapshots Table (Time-lapse typing history)
-CREATE TABLE IF NOT EXISTS answer_snapshots (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    answer_id INT NOT NULL,
-    snapshot_text LONGTEXT NOT NULL,
-    char_count INT NOT NULL DEFAULT 0,
-    keystrokes_delta INT NOT NULL DEFAULT 0,
-    time_offset_seconds INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (answer_id) REFERENCES answers(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

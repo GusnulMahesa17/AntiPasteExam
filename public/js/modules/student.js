@@ -60,10 +60,8 @@ export function createStudentModule(api, toast) {
       try {
         const answersArray = Object.values(this.studentAnswers);
         const eventsToSend = [...telemetry.pendingEvents];
-        const snapshotsToSend = [...telemetry.pendingSnapshots];
 
         telemetry.pendingEvents = [];
-        telemetry.pendingSnapshots = [];
 
         await api('/api/submissions/save', {
           method: 'POST',
@@ -71,7 +69,6 @@ export function createStudentModule(api, toast) {
             submission_id: this.activeSubmission.id,
             answers: answersArray,
             events: eventsToSend,
-            snapshots: snapshotsToSend,
           }),
         });
 
@@ -84,12 +81,11 @@ export function createStudentModule(api, toast) {
       }
     },
 
-    async finalizeSubmission(telemetry, durationMinutes) {
+    async finalizeSubmission(telemetry) {
       if (!confirm('Are you sure you want to finalize and submit your examination? Answers cannot be edited afterward.')) {
         return null;
       }
 
-      telemetry.captureSnapshots(durationMinutes);
       await this.saveDraft(telemetry, true);
 
       const result = await api('/api/submissions/submit', {

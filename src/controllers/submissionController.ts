@@ -31,14 +31,14 @@ export const startSubmission = async (req: AuthenticatedRequest, res: Response):
 export const saveAnswers = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const studentId = req.user!.id;
-    const { submission_id, answers, events, snapshots } = req.body;
+    const { submission_id, answers, events } = req.body;
 
     if (!submission_id) {
       res.status(400).json({ error: 'submission_id is required' });
       return;
     }
 
-    await SubmissionService.saveProgress(studentId, submission_id, answers, events, snapshots);
+    await SubmissionService.saveProgress(studentId, submission_id, answers, events);
     res.status(200).json({ message: 'Progress saved successfully' });
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to save exam progress' });
