@@ -1,12 +1,19 @@
     <!-- 3. DEDICATED EXAM & QUESTION MANAGEMENT WORKSPACE PAGE -->
-    <template x-if="user && user.role === 'teacher' && currentView === 'exam_editor'">
+    <template x-if="user && user.role === 'teacher' && currentView === 'exam_editor' && isLoadingExamEditor">
+      <div class="card" role="status" aria-live="polite" style="max-width: 640px; margin: 4rem auto; padding: 2rem; text-align: center;">
+        <h1 class="section-title">Loading examination</h1>
+        <p class="text-muted">Fetching examination details...</p>
+      </div>
+    </template>
+
+    <template x-if="user && user.role === 'teacher' && currentView === 'exam_editor' && !isLoadingExamEditor">
       <div>
         <!-- Page Header & Action Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem;">
           <div>
             <button @click="navigateToExaminations()" class="btn btn-secondary btn-sm" style="margin-bottom: 0.5rem;">
               <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-arrow-left" /></svg>
-              <span>Back to Dashboard</span>
+              <span>Back to Examinations</span>
             </button>
             <h1 class="section-title" style="margin-bottom: 0.25rem;" x-text="isEditingExam ? 'Edit Examination & Questions' : 'Create New Examination'"></h1>
             <p class="text-muted">Configure examination parameters and build structured essay questions.</p>

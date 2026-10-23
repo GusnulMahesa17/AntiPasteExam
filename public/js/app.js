@@ -30,6 +30,7 @@ function defineApp() {
       exams: [],
       activeExam: null,
       isLoading: false,
+      isLoadingExamEditor: false,
 
       // Concrete initialized sub-modules
       auth: authModule,
@@ -107,8 +108,13 @@ function defineApp() {
           await this.fetchExams();
         } else if (this.currentView === 'exam_editor') {
           if (teacherEdit) {
+            this.isLoadingExamEditor = true;
             const view = await this.teacher.openEditExamPage(Number(teacherEdit[1]));
-            if (!view) this.navigateToExaminations();
+            if (!view) {
+              this.navigateToExaminations();
+              return;
+            }
+            this.isLoadingExamEditor = false;
           } else {
             this.teacher.openCreateExamPage();
           }

@@ -42,7 +42,7 @@ const sendPage = (view: string) => (_req: Request, res: Response): void => {
 
 app.get('/', sendPage('partials/landing.html'));
 app.get('/teacher/dashboard', sendPage('partials/teacher-dashboard.html'));
-app.get('/teacher/exams', sendPage('partials/teacher-dashboard.html'));
+app.get('/teacher/exams', sendPage('partials/teacher-examinations.html'));
 app.get('/teacher/exams/new', sendPage('partials/teacher-exam-editor.html'));
 app.get('/teacher/exams/:examId/edit', sendPage('partials/teacher-exam-editor.html'));
 app.get('/teacher/exams/:examId/submissions', sendPage('partials/teacher-submissions.html'));

@@ -1,0 +1,109 @@
+    <!-- TEACHER EXAM MANAGEMENT VIEW -->
+    <template x-if="user && user.role === 'teacher' && currentView === 'teacher_exams'">
+      <div class="dashboard-layout dashboard-layout--teacher" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed }" x-data="{ sidebarCollapsed: false }">
+        <aside class="dashboard-sidebar">
+          <p class="dashboard-sidebar-label">TEACHER</p>
+          <h2 class="dashboard-sidebar-title">Workspace</h2>
+          <button type="button" class="dashboard-sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+            <svg class="icon" :class="{ 'is-collapsed': sidebarCollapsed }"><use href="#icon-arrow-left" /></svg>
+            <span>Collapse sidebar</span>
+          </button>
+          <nav class="dashboard-nav" aria-label="Teacher dashboard">
+            <button type="button" class="dashboard-nav-link" title="Overview" @click="navigateToDashboard()">
+              <svg class="icon"><use href="#icon-activity" /></svg>
+              <span>Overview</span>
+            </button>
+            <button type="button" class="dashboard-nav-link is-current" title="Examinations" @click="navigateToExaminations()">
+              <svg class="icon"><use href="#icon-file-text" /></svg>
+              <span>Examinations</span>
+            </button>
+          </nav>
+          <p class="dashboard-sidebar-note">Create assessments and review student submissions.</p>
+        </aside>
+
+        <div class="dashboard-main">
+          <section id="teacher-exams">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h1 class="section-title">Exam Management</h1>
+                <p class="text-muted">Create essay assessments, configure questions, and review student typing forensics.</p>
+              </div>
+              <button @click="openCreateExamPage()" class="btn btn-primary">
+                <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
+                <span>Create New Exam</span>
+              </button>
+            </div>
+
+            <div class="grid">
+              <template x-for="exam in exams" :key="exam.id">
+                <div class="card">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <span class="badge" :class="exam.is_published ? 'badge-neutral' : 'badge-warning'" x-text="exam.is_published ? 'Published' : 'Draft'"></span>
+                    <span class="text-mono" style="font-size: 0.8125rem; color: var(--color-text-muted);" x-text="exam.duration_minutes + ' min limit'"></span>
+                  </div>
+
+                  <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;" x-text="exam.title"></h3>
+                  <p class="text-muted" style="font-size: 0.9375rem; margin-bottom: 1rem; min-height: 40px;" x-text="exam.description || 'No additional instructions.'"></p>
+
+                  <!-- Access Key & Schedule Meta Tags -->
+                  <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; font-size: 0.8125rem;">
+                    <template x-if="exam.access_key">
+                      <div style="display: inline-flex; align-items: center; gap: 6px; color: var(--color-primary); background: var(--color-primary-subtle); border: 1px solid var(--color-primary-border); padding: 3px 8px; border-radius: var(--rounded-sm); width: fit-content;">
+                        <svg class="icon" style="width: 12px; height: 12px; stroke: var(--color-primary);"><use href="#icon-key" /></svg>
+                        <span>Key: <strong class="text-mono" x-text="exam.access_key"></strong></span>
+                      </div>
+                    </template>
+
+                    <template x-if="exam.start_time || exam.end_time">
+                      <div style="display: flex; align-items: center; gap: 6px; color: var(--color-text-muted);">
+                        <svg class="icon" style="width: 12px; height: 12px; stroke: var(--color-tertiary);"><use href="#icon-calendar" /></svg>
+                        <span x-text="(exam.start_time ? formatDateTime(exam.start_time) : 'Immediate') + ' → ' + (exam.end_time ? formatDateTime(exam.end_time) : 'Open-ended')"></span>
+                      </div>
+                    </template>
+                  </div>
+
+                  <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border-subtle); padding-top: 0.75rem;">
+                    <div>
+                      <svg class="icon" style="width: 14px; height: 14px; vertical-align: -2px;"><use href="#icon-file-text" /></svg>
+                      <strong style="color: var(--color-text-main);" x-text="exam.question_count || 0"></strong> Questions
+                    </div>
+                    <div>
+                      <svg class="icon" style="width: 14px; height: 14px; vertical-align: -2px;"><use href="#icon-user" /></svg>
+                      <strong style="color: var(--color-text-main);" x-text="exam.submission_count || 0"></strong> Submissions
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 8px;">
+                    <button @click="viewSubmissions(exam.id)" class="btn btn-primary btn-sm" style="flex: 1;">
+                      <svg class="icon" style="stroke: #fff; width: 14px; height: 14px;"><use href="#icon-eye" /></svg>
+                      <span>Submissions</span>
+                    </button>
+                    <button @click="openEditExamPage(exam.id)" class="btn btn-secondary btn-sm" title="Edit Questions & Settings">
+                      <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-edit" /></svg>
+                      <span>Edit</span>
+                    </button>
+                    <button @click="deleteExam(exam.id)" class="btn btn-secondary btn-sm" style="color: var(--color-secondary);" title="Delete Exam">
+                      <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-trash" /></svg>
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <template x-if="exams.length === 0">
+              <div class="card" style="padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 2rem auto;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-surface-variant); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+                  <svg class="icon" style="width: 28px; height: 28px; stroke: var(--color-primary);"><use href="#icon-file-text" /></svg>
+                </div>
+                <h3 style="margin-bottom: 0.5rem;">No Examinations Created</h3>
+                <p class="text-muted" style="margin-bottom: 1.5rem;">Set up your first examination with essay questions and custom duration limits.</p>
+                <button @click="openCreateExamPage()" class="btn btn-primary">
+                  <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
+                  <span>Create New Exam</span>
+                </button>
+              </div>
+            </template>
+          </section>
+        </div>
+      </div>
+    </template>
