@@ -42,10 +42,12 @@ const sendPage = (view: string) => (_req: Request, res: Response): void => {
 
 app.get('/', sendPage('partials/landing.html'));
 app.get('/teacher/dashboard', sendPage('partials/teacher-dashboard.html'));
+app.get('/teacher/exams', sendPage('partials/teacher-dashboard.html'));
 app.get('/teacher/exams/new', sendPage('partials/teacher-exam-editor.html'));
 app.get('/teacher/exams/:examId/edit', sendPage('partials/teacher-exam-editor.html'));
 app.get('/teacher/exams/:examId/submissions', sendPage('partials/teacher-submissions.html'));
 app.get('/student/dashboard', sendPage('partials/student-dashboard.html'));
+app.get('/student/exams', sendPage('partials/student-dashboard.html'));
 app.get('/student/exams/:examId', sendPage('partials/student-exam-room.html'));
 app.get('/submissions/:submissionId', sendPage('partials/teacher-audit.html'));
 

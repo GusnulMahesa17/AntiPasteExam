@@ -1,43 +1,49 @@
     <!-- 5. STUDENT DASHBOARD VIEW (KEY-BASED JOIN & FLEXIBLE TIME WORKFLOW) -->
-    <template x-if="user && user.role === 'student' && currentView === 'dashboard'">
-      <div class="dashboard-layout dashboard-layout--student" x-data="{ dashboardSection: 'overview' }">
+    <template x-if="user && user.role === 'student' && (currentView === 'dashboard' || currentView === 'student_exams')">
+      <div class="dashboard-layout dashboard-layout--student" x-data="{ dashboardSection: currentView === 'student_exams' ? 'exams' : 'overview' }">
         <aside class="dashboard-sidebar">
           <p class="dashboard-sidebar-label">STUDENT</p>
           <h2 class="dashboard-sidebar-title">My workspace</h2>
           <nav class="dashboard-nav" aria-label="Student dashboard">
-            <a class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" href="#student-overview" @click="dashboardSection = 'overview'">
+            <button type="button" class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" @click="navigateToDashboard()">
               <svg class="icon"><use href="#icon-activity" /></svg>
               <span>Overview</span>
-            </a>
-            <a class="dashboard-nav-link" :class="dashboardSection === 'join' ? 'is-current' : ''" href="#student-join" @click="dashboardSection = 'join'">
-              <svg class="icon"><use href="#icon-key" /></svg>
-              <span>Access an exam</span>
-            </a>
-            <a class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" href="#student-exams" @click="dashboardSection = 'exams'">
+            </button>
+            <button type="button" class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" @click="navigateToExaminations()">
               <svg class="icon"><use href="#icon-file-text" /></svg>
-              <span>My examinations</span>
-            </a>
+              <span>Examinations</span>
+            </button>
           </nav>
-          <p class="dashboard-sidebar-note">Enter a teacher-provided key to unlock an exam.</p>
+          <p class="dashboard-sidebar-note">Access examinations with a key provided by your teacher.</p>
         </aside>
 
         <div class="dashboard-main">
-        <div id="student-overview" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <div class="badge badge-neutral" style="margin-bottom: 0.5rem;">
-              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
-              <span>Student Portal</span>
+          <section id="student-overview" x-show="dashboardSection === 'overview'">
+            <div style="margin-bottom: 2rem;">
+              <div class="badge badge-neutral" style="margin-bottom: 0.5rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
+                <span>Student Portal</span>
+              </div>
+              <h1 class="section-title">Overview</h1>
+              <p class="text-muted">View your unlocked examinations and use a teacher-provided key to access a new exam.</p>
             </div>
-            <h1 class="section-title">Examination Portal</h1>
-            <p class="text-muted">Examinations are protected and do not appear before entering your passcode. Click the button to enter your passcode.</p>
-          </div>
+            <button type="button" @click="navigateToExaminations()" class="btn btn-primary">
+              <svg class="icon" style="stroke: #fff;"><use href="#icon-file-text" /></svg>
+              <span>View Examinations</span>
+            </button>
+          </section>
 
-          <!-- Feature Button: Enter Passcode to Access Exam -->
-          <button @click="openPasscodeModal()" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);">
-            <svg class="icon" style="stroke: #fff; width: 18px; height: 18px;"><use href="#icon-key" /></svg>
-            <span>Enter Passcode to Access Exam</span>
-          </button>
-        </div>
+          <section id="student-exams" x-show="dashboardSection === 'exams'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h1 class="section-title">Examinations</h1>
+                <p class="text-muted">Enter a teacher-provided key to unlock an examination or resume one you have already accessed.</p>
+              </div>
+              <button @click="openPasscodeModal()" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);">
+                <svg class="icon" style="stroke: #fff; width: 18px; height: 18px;"><use href="#icon-key" /></svg>
+                <span>Enter Passcode</span>
+              </button>
+            </div>
 
         <!-- 1. ENTER KEY SECTION -->
         <div id="student-join" class="student-join-section">
@@ -243,7 +249,7 @@
         </template>
 
         <!-- 3. ALL AVAILABLE & ENROLLED EXAMINATIONS ROSTER -->
-        <div id="student-exams" style="margin-top: 2rem;">
+        <div id="student-exam-roster" style="margin-top: 2rem;">
           <template x-if="exams.length > 0">
             <div>
               <h2 class="sub-title" style="margin-bottom: 0.5rem;">My Unlocked & Enrolled Examinations</h2>
@@ -328,7 +334,8 @@
               </div>
             </div>
           </template>
-        </div>
+            </section>
+          </div>
         </div>
       </div>
     </template>

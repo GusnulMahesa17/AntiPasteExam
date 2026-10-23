@@ -1,43 +1,51 @@
     <!-- 2. TEACHER DASHBOARD VIEW (Exams List) -->
-    <template x-if="user && user.role === 'teacher' && currentView === 'dashboard'">
-      <div class="dashboard-layout dashboard-layout--teacher" x-data="{ dashboardSection: 'overview' }">
+    <template x-if="user && user.role === 'teacher' && (currentView === 'dashboard' || currentView === 'teacher_exams')">
+      <div class="dashboard-layout dashboard-layout--teacher" x-data="{ dashboardSection: currentView === 'teacher_exams' ? 'exams' : 'overview' }">
         <aside class="dashboard-sidebar">
           <p class="dashboard-sidebar-label">TEACHER</p>
           <h2 class="dashboard-sidebar-title">Workspace</h2>
           <nav class="dashboard-nav" aria-label="Teacher dashboard">
-            <a class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" href="#teacher-overview" @click="dashboardSection = 'overview'">
+            <button type="button" class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" @click="navigateToDashboard()">
               <svg class="icon"><use href="#icon-activity" /></svg>
               <span>Overview</span>
-            </a>
-            <a class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" href="#teacher-exams" @click="dashboardSection = 'exams'">
+            </button>
+            <button type="button" class="dashboard-nav-link" :class="dashboardSection === 'exams' ? 'is-current' : ''" @click="navigateToExaminations()">
               <svg class="icon"><use href="#icon-file-text" /></svg>
               <span>Examinations</span>
-            </a>
-            <button type="button" class="dashboard-nav-link" @click="openCreateExamPage()">
-              <svg class="icon"><use href="#icon-plus" /></svg>
-              <span>Create exam</span>
             </button>
           </nav>
           <p class="dashboard-sidebar-note">Create assessments and review student submissions.</p>
         </aside>
 
         <div class="dashboard-main">
-        <div id="teacher-overview" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <div class="badge badge-primary" style="margin-bottom: 0.5rem;">
-              <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
-              <span>Teacher Workspace</span>
+          <section id="teacher-overview" x-show="dashboardSection === 'overview'">
+            <div style="margin-bottom: 2rem;">
+              <div class="badge badge-primary" style="margin-bottom: 0.5rem;">
+                <svg class="icon" style="width: 14px; height: 14px;"><use href="#icon-user" /></svg>
+                <span>Teacher Workspace</span>
+              </div>
+              <h1 class="section-title">Overview</h1>
+              <p class="text-muted">Manage your examinations and review student typing forensics from your workspace.</p>
             </div>
-            <h1 class="section-title">Exam Management</h1>
-            <p class="text-muted">Create essay assessments, configure question, and review student typing forensics.</p>
-          </div>
-          <button @click="openCreateExamPage()" class="btn btn-primary">
-            <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
-            <span>Create New Exam</span>
-          </button>
-        </div>
+            <button type="button" @click="navigateToExaminations()" class="btn btn-primary">
+              <svg class="icon" style="stroke: #fff;"><use href="#icon-file-text" /></svg>
+              <span>View Examinations</span>
+            </button>
+          </section>
 
-        <div id="teacher-exams" class="grid">
+          <section id="teacher-exams" x-show="dashboardSection === 'exams'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h1 class="section-title">Exam Management</h1>
+                <p class="text-muted">Create essay assessments, configure questions, and review student typing forensics.</p>
+              </div>
+              <button @click="openCreateExamPage()" class="btn btn-primary">
+                <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
+                <span>Create New Exam</span>
+              </button>
+            </div>
+
+        <div class="grid">
           <template x-for="exam in exams" :key="exam.id">
             <div class="card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -99,13 +107,14 @@
               <svg class="icon" style="width: 28px; height: 28px; stroke: var(--color-primary);"><use href="#icon-file-text" /></svg>
             </div>
             <h3 style="margin-bottom: 0.5rem;">No Examinations Created</h3>
-            <p class="text-muted" style="margin-bottom: 1.5rem;">Set up your first examination with essay questions and custom duration limits on a dedicated management screen.</p>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">Set up your first examination with essay questions and custom duration limits.</p>
             <button @click="openCreateExamPage()" class="btn btn-primary">
               <svg class="icon" style="stroke: #fff;"><use href="#icon-plus" /></svg>
               <span>Create New Exam</span>
             </button>
           </div>
         </template>
+          </section>
         </div>
       </div>
     </template>

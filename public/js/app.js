@@ -73,9 +73,11 @@ function defineApp() {
 
         if (pathname === '/') this.currentView = 'landing';
         else if (pathname === '/teacher/dashboard') this.currentView = 'dashboard';
+        else if (pathname === '/teacher/exams') this.currentView = 'teacher_exams';
         else if (pathname === '/teacher/exams/new' || teacherEdit) this.currentView = 'exam_editor';
         else if (teacherSubmissions) this.currentView = 'teacher_submissions';
         else if (pathname === '/student/dashboard') this.currentView = 'dashboard';
+        else if (pathname === '/student/exams') this.currentView = 'student_exams';
         else if (studentExam) this.currentView = 'exam_room';
         else if (submissionAudit) this.currentView = 'submission_audit';
         else {
@@ -101,12 +103,12 @@ function defineApp() {
           return;
         }
 
-        if (this.currentView === 'dashboard') {
+        if (this.currentView === 'dashboard' || this.currentView === 'teacher_exams' || this.currentView === 'student_exams') {
           await this.fetchExams();
         } else if (this.currentView === 'exam_editor') {
           if (teacherEdit) {
             const view = await this.teacher.openEditExamPage(Number(teacherEdit[1]));
-            if (!view) this.navigateToDashboard();
+            if (!view) this.navigateToExaminations();
           } else {
             this.teacher.openCreateExamPage();
           }
@@ -137,6 +139,11 @@ function defineApp() {
 
       navigateToDashboard() {
         const route = this.user?.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard';
+        window.location.assign(route);
+      },
+
+      navigateToExaminations() {
+        const route = this.user?.role === 'teacher' ? '/teacher/exams' : '/student/exams';
         window.location.assign(route);
       },
 
@@ -236,7 +243,7 @@ function defineApp() {
         const success = await this.teacher.saveExam(this.fetchExams.bind(this), publish);
         if (success) {
           if (publish) {
-            window.location.assign('/teacher/dashboard');
+            window.location.assign('/teacher/exams');
           }
           // For draft saves, stay on the editor page so teacher can keep editing
         }
