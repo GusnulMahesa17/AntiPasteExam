@@ -1,13 +1,16 @@
     <!-- 2. TEACHER DASHBOARD VIEW -->
     <template x-if="user && user.role === 'teacher' && currentView === 'dashboard'">
-      <div class="dashboard-layout dashboard-layout--teacher" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed }" x-data="{ sidebarCollapsed: false }">
+      <div class="dashboard-layout dashboard-layout--teacher" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed, 'dashboard-layout--mobile-open': sidebarOpen }">
         <aside class="dashboard-sidebar">
-          <p class="dashboard-sidebar-label">TEACHER</p>
-          <h2 class="dashboard-sidebar-title">Workspace</h2>
-          <button type="button" class="dashboard-sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-            <svg class="icon" :class="{ 'is-collapsed': sidebarCollapsed }"><use href="#icon-arrow-left" /></svg>
-            <span>Collapse sidebar</span>
-          </button>
+          <div class="dashboard-sidebar-header">
+            <div>
+              <p class="dashboard-sidebar-label">TEACHER</p>
+              <h2 class="dashboard-sidebar-title">Workspace</h2>
+            </div>
+            <button type="button" class="dashboard-sidebar-toggle" @click="toggleSidebar()" :aria-expanded="!sidebarCollapsed" :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+              <svg class="icon" :class="{ 'is-collapsed': sidebarCollapsed }"><use href="#icon-arrow-left" /></svg>
+            </button>
+          </div>
           <nav class="dashboard-nav" aria-label="Teacher dashboard">
             <button type="button" class="dashboard-nav-link is-current" title="Overview" @click="navigateToDashboard()">
               <svg class="icon"><use href="#icon-activity" /></svg>
@@ -20,6 +23,7 @@
           </nav>
           <p class="dashboard-sidebar-note">Create assessments and review student submissions.</p>
         </aside>
+        <button type="button" class="dashboard-sidebar-backdrop" x-show="sidebarOpen" @click="sidebarOpen = false" aria-label="Close navigation"></button>
 
         <div class="dashboard-main">
           <section id="teacher-overview">

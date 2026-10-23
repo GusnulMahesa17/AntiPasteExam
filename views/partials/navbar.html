@@ -1,6 +1,11 @@
   <!-- Top Navigation Bar -->
   <header class="navbar">
     <div class="navbar-inner">
+      <template x-if="user && ['dashboard', 'teacher_exams', 'student_exams'].includes(currentView)">
+        <button type="button" class="navbar-sidebar-toggle" @click="toggleSidebar()" :aria-expanded="sidebarOpen" :aria-label="sidebarOpen ? 'Close navigation' : 'Open navigation'" :title="sidebarOpen ? 'Close navigation' : 'Open navigation'">
+          <svg class="icon" :class="{ 'is-collapsed': !sidebarOpen }"><use href="#icon-arrow-left" /></svg>
+        </button>
+      </template>
       <a class="brand" :href="user ? (user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard') : '/'">
         <div class="brand-badge-ai">
           <svg class="icon" style="stroke: #fff;"><use href="#icon-shield" /></svg>
@@ -11,15 +16,29 @@
         </div>
       </a>
 
-      <div>
+      <div class="navbar-actions">
         <template x-if="user">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <span class="badge" :class="user.role === 'teacher' ? 'badge-primary' : 'badge-neutral'">
-              <span class="pulse-indicator"></span>
-              <span x-text="user.role"></span>
-            </span>
-            <span style="font-weight: 500; font-size: 0.9375rem; color: var(--color-text-main);" x-text="user.name"></span>
-            <button @click="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+          <div class="navbar-user">
+            <div class="navbar-user-desktop">
+              <span class="badge" :class="user.role === 'teacher' ? 'badge-primary' : 'badge-neutral'">
+                <span class="pulse-indicator"></span>
+                <span x-text="user.role"></span>
+              </span>
+              <span class="navbar-user-name" x-text="user.name"></span>
+              <button @click="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+            </div>
+            <div class="profile-menu" @click.outside="profileMenuOpen = false">
+              <button type="button" class="profile-menu-toggle" @click="profileMenuOpen = !profileMenuOpen" :aria-expanded="profileMenuOpen" aria-label="Open profile menu">
+                <svg class="icon"><use href="#icon-user" /></svg>
+              </button>
+              <div class="profile-menu-panel" x-show="profileMenuOpen" x-cloak>
+                <span class="profile-menu-name" x-text="user.name"></span>
+                <span class="badge" :class="user.role === 'teacher' ? 'badge-primary' : 'badge-neutral'">
+                  <span x-text="user.role"></span>
+                </span>
+                <button type="button" @click="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+              </div>
+            </div>
           </div>
         </template>
         <template x-if="!user">

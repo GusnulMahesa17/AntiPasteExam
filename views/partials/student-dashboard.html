@@ -1,13 +1,16 @@
     <!-- 5. STUDENT DASHBOARD VIEW (KEY-BASED JOIN & FLEXIBLE TIME WORKFLOW) -->
     <template x-if="user && user.role === 'student' && (currentView === 'dashboard' || currentView === 'student_exams')">
-      <div class="dashboard-layout dashboard-layout--student" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed }" x-data="{ dashboardSection: currentView === 'student_exams' ? 'exams' : 'overview', sidebarCollapsed: false }">
+      <div class="dashboard-layout dashboard-layout--student" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed, 'dashboard-layout--mobile-open': sidebarOpen }" x-data="{ dashboardSection: currentView === 'student_exams' ? 'exams' : 'overview' }">
         <aside class="dashboard-sidebar">
-          <p class="dashboard-sidebar-label">STUDENT</p>
-          <h2 class="dashboard-sidebar-title">My workspace</h2>
-          <button type="button" class="dashboard-sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed" :aria-expanded="!sidebarCollapsed" :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-            <svg class="icon" :class="{ 'is-collapsed': sidebarCollapsed }"><use href="#icon-arrow-left" /></svg>
-            <span>Collapse sidebar</span>
-          </button>
+          <div class="dashboard-sidebar-header">
+            <div>
+              <p class="dashboard-sidebar-label">STUDENT</p>
+              <h2 class="dashboard-sidebar-title">My workspace</h2>
+            </div>
+            <button type="button" class="dashboard-sidebar-toggle" @click="toggleSidebar()" :aria-expanded="!sidebarCollapsed" :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+              <svg class="icon" :class="{ 'is-collapsed': sidebarCollapsed }"><use href="#icon-arrow-left" /></svg>
+            </button>
+          </div>
           <nav class="dashboard-nav" aria-label="Student dashboard">
             <button type="button" class="dashboard-nav-link" :class="dashboardSection === 'overview' ? 'is-current' : ''" title="Overview" @click="navigateToDashboard()">
               <svg class="icon"><use href="#icon-activity" /></svg>
@@ -20,6 +23,7 @@
           </nav>
           <p class="dashboard-sidebar-note">Access examinations with a key provided by your teacher.</p>
         </aside>
+        <button type="button" class="dashboard-sidebar-backdrop" x-show="sidebarOpen" @click="sidebarOpen = false" aria-label="Close navigation"></button>
 
         <div class="dashboard-main">
           <section id="student-overview" x-show="dashboardSection === 'overview'">

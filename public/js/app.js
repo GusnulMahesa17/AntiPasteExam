@@ -31,6 +31,9 @@ function defineApp() {
       activeExam: null,
       isLoading: false,
       isLoadingExamEditor: false,
+      sidebarCollapsed: localStorage.getItem('dashboardSidebarCollapsed') === 'true',
+      sidebarOpen: false,
+      profileMenuOpen: false,
 
       // Concrete initialized sub-modules
       auth: authModule,
@@ -151,6 +154,15 @@ function defineApp() {
       navigateToExaminations() {
         const route = this.user?.role === 'teacher' ? '/teacher/exams' : '/student/exams';
         window.location.assign(route);
+      },
+
+      toggleSidebar() {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+          this.sidebarOpen = !this.sidebarOpen;
+          return;
+        }
+        this.sidebarCollapsed = !this.sidebarCollapsed;
+        localStorage.setItem('dashboardSidebarCollapsed', String(this.sidebarCollapsed));
       },
 
       showToast(message, type = 'info') {
