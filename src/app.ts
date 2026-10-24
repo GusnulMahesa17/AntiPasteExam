@@ -52,7 +52,7 @@ app.get('/submissions/:submissionId', sendPage('partials/teacher/teacher-audit.h
 
 // Student routes
 app.get('/student/dashboard', sendPage('partials/student/student-dashboard.html'));
-app.get('/student/exams', sendPage('partials/student/student-exams.html'));
+app.get('/student/exams', sendPage('partials/student/student-exam.html'));
 app.get('/student/exams/:examId', sendPage('partials/student/student-exam-room.html'));
 
 
