@@ -20,7 +20,7 @@ AntiPasteExam is a modern web-based examination platform designed to encourage a
   - Tracks browser tab switching & blur events.
 - **Forensic Audit Inspector**:
   - Computes an **Academic Integrity Score** ($0 - 100\%$).
-  - Displays submitted answers and typing analytics.
+  - Displays submitted answers analytics.
   - Security events log with exact timestamps.
 
 ---
@@ -29,21 +29,8 @@ AntiPasteExam is a modern web-based examination platform designed to encourage a
 
 - **Backend**: Node.js, Express.js, TypeScript
 - **Database**: MySQL (`mysql2` pool with auto-initialization schema)
-- **Frontend**: HTML5, Vanilla CSS (Glassmorphism design), JavaScript, Alpine.js
+- **Frontend**: HTML5,  JavaScript, Alpine.js
 
-## Application Pages
-
-The interface is server-rendered as separate pages. Dashboard, exam editor, exam room, submissions, and audit views have direct URLs and can be refreshed or bookmarked:
-
-- `/teacher/dashboard`
-- `/teacher/exams/new`
-- `/teacher/exams/:examId/edit`
-- `/teacher/exams/:examId/submissions`
-- `/student/dashboard`
-- `/student/exams/:examId`
-- `/submissions/:submissionId`
-
----
 
 ## Getting Started
 
