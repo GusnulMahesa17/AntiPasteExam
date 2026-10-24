@@ -1,6 +1,6 @@
     <!-- 2. TEACHER DASHBOARD VIEW -->
     <template x-if="user && user.role === 'teacher' && currentView === 'dashboard'">
-      <div class="dashboard-layout dashboard-layout--teacher" :class="{ 'dashboard-layout--collapsed': sidebarCollapsed, 'dashboard-layout--mobile-open': sidebarOpen }">
+      <div class="dashboard-layout dashboard-layout--teacher" x-cloak :class="{ 'dashboard-layout--collapsed': sidebarCollapsed, 'dashboard-layout--mobile-open': sidebarOpen }">
         <aside class="dashboard-sidebar">
           <div class="dashboard-sidebar-header">
             <div>

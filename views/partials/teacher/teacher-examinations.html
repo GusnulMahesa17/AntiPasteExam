@@ -96,7 +96,7 @@
               </template>
             </div>
 
-            <template x-if="exams.length === 0">
+            <template x-if="!isLoading && exams.length === 0">
               <div class="card" style="padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 2rem auto;">
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-surface-variant); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
                   <svg class="icon" style="width: 28px; height: 28px; stroke: var(--color-primary);"><use href="#icon-file-text" /></svg>

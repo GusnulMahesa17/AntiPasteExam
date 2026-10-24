@@ -41,14 +41,19 @@ const sendPage = (view: string) => (_req: Request, res: Response): void => {
 };
 
 app.get('/', sendPage('partials/landing.html'));
-app.get('/teacher/dashboard', sendPage('partials/teacher-dashboard.html'));
-app.get('/teacher/exams', sendPage('partials/teacher-examinations.html'));
-app.get('/teacher/exams/new', sendPage('partials/teacher-exam-editor.html'));
-app.get('/teacher/exams/:examId/edit', sendPage('partials/teacher-exam-editor.html'));
-app.get('/teacher/exams/:examId/submissions', sendPage('partials/teacher-submissions.html'));
-app.get('/student/dashboard', sendPage('partials/student-dashboard.html'));
-app.get('/student/exams', sendPage('partials/student-dashboard.html'));
-app.get('/student/exams/:examId', sendPage('partials/student-exam-room.html'));
-app.get('/submissions/:submissionId', sendPage('partials/teacher-audit.html'));
+
+// Teacher routes
+app.get('/teacher/dashboard', sendPage('partials/teacher/teacher-dashboard.html'));
+app.get('/teacher/exams', sendPage('partials/teacher/teacher-examinations.html'));
+app.get('/teacher/exams/new', sendPage('partials/teacher/teacher-exam-editor.html'));
+app.get('/teacher/exams/:examId/edit', sendPage('partials/teacher/teacher-exam-editor.html'));
+app.get('/teacher/exams/:examId/submissions', sendPage('partials/teacher/teacher-submissions.html'));
+app.get('/submissions/:submissionId', sendPage('partials/teacher/teacher-audit.html'));
+
+// Student routes
+app.get('/student/dashboard', sendPage('partials/student/student-dashboard.html'));
+app.get('/student/exams', sendPage('partials/student/student-exams.html'));
+app.get('/student/exams/:examId', sendPage('partials/student/student-exam-room.html'));
+
 
 export default app;
