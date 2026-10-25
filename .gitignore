@@ -12,4 +12,6 @@ PRD.md
 .agents
 .clinerules
 .github
+.opencode
+.Dockerfile
 opencode.json
