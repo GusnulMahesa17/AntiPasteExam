@@ -29,7 +29,7 @@
                   x-model="keyModal.inputKey"
                   placeholder="e.g. ETHICS-2026"
                   required
-                  autofocus
+                  x-init="$nextTick(() => $el.focus())"
                   style="font-size: 1.15rem; letter-spacing: 0.08em; text-align: center; font-weight: 600; text-transform: uppercase;"
                 />
               </div>
